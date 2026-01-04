@@ -13,11 +13,15 @@ class ProtocolVentilationManager extends Component
 {
     public Protocol $protocol;
 
-    // Formularz Rozdzielnicy
+    // Rozdzielnice
+    public $showDistributorModal = false;
+    public $editingDistributorId = null;
     public $distName = '';
     public $distLocation = '';
 
-    // Formularz Wentylatora
+    // Wentylatory
+    public $showFanModal = false;
+    public $editingFanId = null;
     public $fanName = '';
     public $fanLocation = '';
 
@@ -26,31 +30,86 @@ class ProtocolVentilationManager extends Component
         $this->protocol = $protocol;
     }
 
-    public function addDistributor()
+    // --- Rozdzielnice ---
+
+    public function openDistributorModal()
+    {
+        $this->editingDistributorId = null;
+        $this->distName = '';
+        $this->distLocation = '';
+        $this->showDistributorModal = true;
+    }
+
+    public function editDistributor($id)
+    {
+        $item = ProtocolVentilationDistributor::find($id);
+        if ($item && $item->protocol_id === $this->protocol->id) {
+            $this->editingDistributorId = $id;
+            $this->distName = $item->name;
+            $this->distLocation = $item->location;
+            $this->showDistributorModal = true;
+        }
+    }
+
+    public function cloneDistributor($id)
+    {
+        $item = ProtocolVentilationDistributor::find($id);
+        if ($item && $item->protocol_id === $this->protocol->id) {
+            $this->editingDistributorId = null; // Nowy element
+            $this->distName = $item->name . ' - KOPIA';
+            $this->distLocation = $item->location;
+            $this->showDistributorModal = true;
+        }
+    }
+
+    public function saveDistributor()
     {
         $this->validate([
             'distName' => 'required|string|max:255',
             'distLocation' => 'nullable|string|max:255',
         ]);
 
-        // 1. Dodaj do inwentarza
-        $invItem = VentilationDistributor::create([
-            'client_object_id' => $this->protocol->clientObject->id,
-            'name' => $this->distName,
-            'location' => $this->distLocation,
-            'is_active' => true,
-        ]);
+        if ($this->editingDistributorId) {
+            // Edycja
+            $item = ProtocolVentilationDistributor::find($this->editingDistributorId);
+            if ($item && $item->protocol_id === $this->protocol->id) {
+                $item->update([
+                    'name' => $this->distName,
+                    'location' => $this->distLocation,
+                ]);
+                // Aktualizacja inwentarza jeśli powiązany
+                if ($item->ventilation_distributor_id) {
+                    $inv = VentilationDistributor::find($item->ventilation_distributor_id);
+                    if ($inv) {
+                        $inv->update([
+                            'name' => $this->distName,
+                            'location' => $this->distLocation,
+                        ]);
+                    }
+                }
+            }
+        } else {
+            // Dodawanie nowego (także klona)
+            // 1. Dodaj do inwentarza
+            $invItem = VentilationDistributor::create([
+                'client_object_id' => $this->protocol->clientObject->id,
+                'name' => $this->distName,
+                'location' => $this->distLocation,
+                'is_active' => true,
+            ]);
 
-        $maxSort = $this->protocol->ventilationDistributors()->max('sort_order') ?? 0;
+            $maxSort = $this->protocol->ventilationDistributors()->max('sort_order') ?? 0;
 
-        // 2. Dodaj do protokołu
-        $this->protocol->ventilationDistributors()->create([
-            'ventilation_distributor_id' => $invItem->id,
-            'name' => $this->distName,
-            'location' => $this->distLocation,
-            'sort_order' => $maxSort + 1,
-        ]);
+            // 2. Dodaj do protokołu
+            $this->protocol->ventilationDistributors()->create([
+                'ventilation_distributor_id' => $invItem->id,
+                'name' => $this->distName,
+                'location' => $this->distLocation,
+                'sort_order' => $maxSort + 1,
+            ]);
+        }
 
+        $this->showDistributorModal = false;
         $this->distName = '';
         $this->distLocation = '';
     }
@@ -80,7 +139,6 @@ class ProtocolVentilationManager extends Component
             $current->save();
             $prev->save();
         } else {
-             // Jeśli sort_order są równe (np. 0), musimy przeliczyć wszystkie
              $this->reorderDistributors();
         }
     }
@@ -114,55 +172,81 @@ class ProtocolVentilationManager extends Component
         }
     }
 
-    public function duplicateDistributor($id)
+    // --- Wentylatory ---
+
+    public function openFanModal()
     {
-        $item = ProtocolVentilationDistributor::find($id);
-        if (!$item || $item->protocol_id !== $this->protocol->id) return;
-
-        // Klonowanie inwentarza
-        $newInvId = null;
-        if ($item->ventilation_distributor_id) {
-            $originalInv = VentilationDistributor::find($item->ventilation_distributor_id);
-            if ($originalInv) {
-                $newInv = $originalInv->replicate();
-                $newInv->save();
-                $newInvId = $newInv->id;
-            }
-        }
-
-        $maxSort = $this->protocol->ventilationDistributors()->max('sort_order') ?? 0;
-
-        $newItem = $item->replicate();
-        $newItem->ventilation_distributor_id = $newInvId;
-        $newItem->sort_order = $maxSort + 1;
-        $newItem->save();
+        $this->editingFanId = null;
+        $this->fanName = '';
+        $this->fanLocation = '';
+        $this->showFanModal = true;
     }
 
-    public function addFan()
+    public function editFan($id)
+    {
+        $item = ProtocolVentilationFan::find($id);
+        if ($item && $item->protocol_id === $this->protocol->id) {
+            $this->editingFanId = $id;
+            $this->fanName = $item->name;
+            $this->fanLocation = $item->location;
+            $this->showFanModal = true;
+        }
+    }
+
+    public function cloneFan($id)
+    {
+        $item = ProtocolVentilationFan::find($id);
+        if ($item && $item->protocol_id === $this->protocol->id) {
+            $this->editingFanId = null;
+            $this->fanName = $item->name . ' - KOPIA';
+            $this->fanLocation = $item->location;
+            $this->showFanModal = true;
+        }
+    }
+
+    public function saveFan()
     {
         $this->validate([
             'fanName' => 'required|string|max:255',
             'fanLocation' => 'nullable|string|max:255',
         ]);
 
-        // 1. Dodaj do inwentarza
-        $invItem = VentilationFan::create([
-            'client_object_id' => $this->protocol->clientObject->id,
-            'name' => $this->fanName,
-            'location' => $this->fanLocation,
-            'is_active' => true,
-        ]);
+        if ($this->editingFanId) {
+            $item = ProtocolVentilationFan::find($this->editingFanId);
+            if ($item && $item->protocol_id === $this->protocol->id) {
+                $item->update([
+                    'name' => $this->fanName,
+                    'location' => $this->fanLocation,
+                ]);
+                if ($item->ventilation_fan_id) {
+                    $inv = VentilationFan::find($item->ventilation_fan_id);
+                    if ($inv) {
+                        $inv->update([
+                            'name' => $this->fanName,
+                            'location' => $this->fanLocation,
+                        ]);
+                    }
+                }
+            }
+        } else {
+            $invItem = VentilationFan::create([
+                'client_object_id' => $this->protocol->clientObject->id,
+                'name' => $this->fanName,
+                'location' => $this->fanLocation,
+                'is_active' => true,
+            ]);
 
-        $maxSort = $this->protocol->ventilationFans()->max('sort_order') ?? 0;
+            $maxSort = $this->protocol->ventilationFans()->max('sort_order') ?? 0;
 
-        // 2. Dodaj do protokołu
-        $this->protocol->ventilationFans()->create([
-            'ventilation_fan_id' => $invItem->id,
-            'name' => $this->fanName,
-            'location' => $this->fanLocation,
-            'sort_order' => $maxSort + 1,
-        ]);
+            $this->protocol->ventilationFans()->create([
+                'ventilation_fan_id' => $invItem->id,
+                'name' => $this->fanName,
+                'location' => $this->fanLocation,
+                'sort_order' => $maxSort + 1,
+            ]);
+        }
 
+        $this->showFanModal = false;
         $this->fanName = '';
         $this->fanLocation = '';
     }
@@ -225,32 +309,8 @@ class ProtocolVentilationManager extends Component
         }
     }
 
-    public function duplicateFan($id)
-    {
-        $item = ProtocolVentilationFan::find($id);
-        if (!$item || $item->protocol_id !== $this->protocol->id) return;
-
-        $newInvId = null;
-        if ($item->ventilation_fan_id) {
-            $originalInv = VentilationFan::find($item->ventilation_fan_id);
-            if ($originalInv) {
-                $newInv = $originalInv->replicate();
-                $newInv->save();
-                $newInvId = $newInv->id;
-            }
-        }
-
-        $maxSort = $this->protocol->ventilationFans()->max('sort_order') ?? 0;
-
-        $newItem = $item->replicate();
-        $newItem->ventilation_fan_id = $newInvId;
-        $newItem->sort_order = $maxSort + 1;
-        $newItem->save();
-    }
-
     public function render()
     {
-        // Upewnij się, że sortowanie jest inicjalizowane jeśli wszystkie mają 0
         if ($this->protocol->ventilationDistributors()->count() > 0 && $this->protocol->ventilationDistributors()->max('sort_order') == 0) {
             $this->reorderDistributors();
         }
