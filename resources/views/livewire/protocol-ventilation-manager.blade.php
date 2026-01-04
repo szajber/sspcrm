@@ -40,7 +40,18 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{{ $distributor->name }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $distributor->location }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button wire:click="removeDistributor({{ $distributor->id }})" class="text-red-600 hover:text-red-900">{{ __('Usuń') }}</button>
+                                <button wire:click="moveDistributorUp({{ $distributor->id }})" class="text-gray-600 hover:text-gray-900 mr-2" title="Przesuń w górę">
+                                    &uarr;
+                                </button>
+                                <button wire:click="moveDistributorDown({{ $distributor->id }})" class="text-gray-600 hover:text-gray-900 mr-2" title="Przesuń w dół">
+                                    &darr;
+                                </button>
+                                <button wire:click="duplicateDistributor({{ $distributor->id }})" class="text-indigo-600 hover:text-indigo-900 mr-2">
+                                    {{ __('Klonuj') }}
+                                </button>
+                                <button wire:click="removeDistributor({{ $distributor->id }})" class="text-red-600 hover:text-red-900">
+                                    {{ __('Usuń') }}
+                                </button>
                             </td>
                         </tr>
                     @empty
@@ -94,7 +105,18 @@
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium">{{ $fan->name }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ $fan->location }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <button wire:click="removeFan({{ $fan->id }})" class="text-red-600 hover:text-red-900">{{ __('Usuń') }}</button>
+                                <button wire:click="moveFanUp({{ $fan->id }})" class="text-gray-600 hover:text-gray-900 mr-2" title="Przesuń w górę">
+                                    &uarr;
+                                </button>
+                                <button wire:click="moveFanDown({{ $fan->id }})" class="text-gray-600 hover:text-gray-900 mr-2" title="Przesuń w dół">
+                                    &darr;
+                                </button>
+                                <button wire:click="duplicateFan({{ $fan->id }})" class="text-indigo-600 hover:text-indigo-900 mr-2">
+                                    {{ __('Klonuj') }}
+                                </button>
+                                <button wire:click="removeFan({{ $fan->id }})" class="text-red-600 hover:text-red-900">
+                                    {{ __('Usuń') }}
+                                </button>
                             </td>
                         </tr>
                     @empty

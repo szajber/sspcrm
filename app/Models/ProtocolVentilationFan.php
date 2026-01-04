@@ -14,6 +14,7 @@ class ProtocolVentilationFan extends Model
         'ventilation_fan_id',
         'name',
         'location',
+        'sort_order',
         'check_alarm_level_2',
         'check_technical_condition',
         'check_cables_condition',

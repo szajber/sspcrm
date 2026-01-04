@@ -14,6 +14,7 @@ class ProtocolVentilationDistributor extends Model
         'ventilation_distributor_id',
         'name',
         'location',
+        'sort_order',
         'check_visual_status',
         'check_visual_notes',
         'check_cables_status',
