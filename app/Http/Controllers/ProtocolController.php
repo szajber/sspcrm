@@ -30,9 +30,6 @@ use Illuminate\Support\Facades\Auth;
 
 class ProtocolController extends Controller
 {
-    /**
-     * Krok 1: Wybór szablonu, dat i wykonawcy
-     */
     public function index(ClientObject $object, System $system)
     {
         $protocols = Protocol::where('client_object_id', $object->id)
@@ -43,6 +40,9 @@ class ProtocolController extends Controller
         return view('protocols.index', compact('object', 'system', 'protocols'));
     }
 
+    /**
+     * Krok 1: Wybór szablonu, dat i wykonawcy
+     */
     public function create(ClientObject $object, System $system)
     {
         $templates = $system->protocolTemplates()->orderBy('is_default', 'desc')->orderBy('name')->get();
@@ -102,25 +102,27 @@ class ProtocolController extends Controller
      */
     public function step2(Protocol $protocol)
     {
-        if ($protocol->system->slug === 'gasnice') {
-            // Logika inicjalizacji listy gaśnic (pobranie z inwentarza lub poprzedniego protokołu)
-            // To już mamy zaimplementowane w poprzednim kroku, ale teraz to jest KROK 2
-            // Celem jest tylko wyświetlenie listy i ew. dodanie/usunięcie pozycji
-            // Właściwe badanie stanu przenosimy do Kroku 3
+        // Sprawdź czy to jest pierwszy raz kiedy wchodzimy do kroku 2 (brak elementów w protokole)
+        // Jeśli tak, spróbuj skopiować z poprzedniego protokołu LUB z inwentarza
+        // ALE tylko jeśli nie ma jeszcze nic przypisanego do tego protokołu
 
+        if ($protocol->system->slug === 'gasnice') {
             $protocolExtinguishers = $protocol->fireExtinguishers()->orderBy('id')->get();
 
             if ($protocolExtinguishers->isEmpty()) {
-                // ... (Logika kopiowania jak wcześniej) ...
+                // 1. Próba pobrania z poprzedniego protokołu
                 $lastProtocol = Protocol::where('client_object_id', $protocol->clientObject->id)
                     ->where('system_id', $protocol->system->id)
-                    ->where('id', '<', $protocol->id)
+                    ->where('id', '<', $protocol->id) // Tylko starsze
+                    ->where('status', 'completed') // Tylko zakończone (opcjonalnie, ale bezpieczniej)
                     ->orderBy('date', 'desc')
                     ->first();
 
+                $copied = false;
                 if ($lastProtocol && $lastProtocol->fireExtinguishers()->exists()) {
                     foreach ($lastProtocol->fireExtinguishers as $prevExtinguisher) {
                         $inventoryItem = FireExtinguisher::find($prevExtinguisher->fire_extinguisher_id);
+                        // Kopiujemy tylko jeśli element inwentarza nadal istnieje i jest aktywny
                         if ($inventoryItem && $inventoryItem->is_active) {
                             $protocol->fireExtinguishers()->create([
                                 'fire_extinguisher_id' => $prevExtinguisher->fire_extinguisher_id,
@@ -130,10 +132,13 @@ class ProtocolController extends Controller
                                 'next_service_year' => $prevExtinguisher->next_service_year,
                                 'notes' => $prevExtinguisher->notes,
                             ]);
+                            $copied = true;
                         }
                     }
-                } else {
-                    // Pobierz z inwentaryzacji obiektu
+                }
+
+                // 2. Jeśli nie udało się skopiować (brak poprzedniego protokołu lub pusty), pobierz z inwentarza
+                if (!$copied) {
                     $inventory = FireExtinguisher::where('client_object_id', $protocol->clientObject->id)
                         ->where('is_active', true)
                         ->orderBy('sort_order')
@@ -476,51 +481,54 @@ class ProtocolController extends Controller
      */
     public function step3(Protocol $protocol)
     {
-        // Pobranie uwag z ostatniego protokołu (do opcjonalnego użycia w widoku)
-        $lastProtocolNotes = null;
-        $lastProtocol = Protocol::where('client_object_id', $protocol->clientObject->id)
-            ->where('system_id', $protocol->system->id)
-            ->where('id', '<', $protocol->id)
-            ->orderBy('date', 'desc')
-            ->first();
+        // Automatyczne pobranie uwag ogólnych z ostatniego protokołu, jeśli jeszcze ich nie ma
+        if (!isset($protocol->data['final_notes'])) {
+            $lastProtocol = Protocol::where('client_object_id', $protocol->clientObject->id)
+                ->where('system_id', $protocol->system->id)
+                ->where('id', '<', $protocol->id)
+                ->orderBy('date', 'desc')
+                ->first();
 
-        if ($lastProtocol && isset($lastProtocol->data['final_notes'])) {
-            $lastProtocolNotes = $lastProtocol->data['final_notes'];
+            if ($lastProtocol && isset($lastProtocol->data['final_notes'])) {
+                $data = $protocol->data ?? [];
+                $data['final_notes'] = $lastProtocol->data['final_notes'];
+                $protocol->update(['data' => $data]);
+            }
         }
 
         if ($protocol->system->slug === 'gasnice') {
             $protocolExtinguishers = $protocol->fireExtinguishers()->orderBy('id')->get();
-            return view('protocols.step3', compact('protocol', 'protocolExtinguishers', 'lastProtocolNotes'));
+            return view('protocols.step3', compact('protocol', 'protocolExtinguishers'));
         }
 
         if ($protocol->system->slug === 'drzwi-przeciwpozarowe') {
             $protocolDoors = $protocol->doors()->orderBy('id')->get();
-            return view('protocols.step3', compact('protocol', 'protocolDoors', 'lastProtocolNotes'));
+            return view('protocols.step3', compact('protocol', 'protocolDoors'));
         }
 
         if ($protocol->system->slug === 'klapy-pozarowe') {
             $protocolDampers = $protocol->fireDampers()->orderBy('id')->get();
-            return view('protocols.step3', compact('protocol', 'protocolDampers', 'lastProtocolNotes'));
+            return view('protocols.step3', compact('protocol', 'protocolDampers'));
         }
 
         if ($protocol->system->slug === 'system-oddymiania') {
             $protocolSmokeSystems = $protocol->smokeExtractionSystems()->orderBy('id')->get();
-            return view('protocols.step3', compact('protocol', 'protocolSmokeSystems', 'lastProtocolNotes'));
+            return view('protocols.step3', compact('protocol', 'protocolSmokeSystems'));
         }
 
         if ($protocol->system->slug === 'oswietlenie-awaryjne-i-ewakuacyjne') {
             $protocolLighting = $protocol->emergencyLightingDevices()->orderBy('id')->get();
-            return view('protocols.step3', compact('protocol', 'protocolLighting', 'lastProtocolNotes'));
+            return view('protocols.step3', compact('protocol', 'protocolLighting'));
         }
 
         if ($protocol->system->slug === 'przeciwpozarowy-wylacznik-pradu') {
             $protocolPwpDevices = $protocol->pwpDevices()->orderBy('system_number')->orderBy('id')->get();
-            return view('protocols.step3', compact('protocol', 'protocolPwpDevices', 'lastProtocolNotes'));
+            return view('protocols.step3', compact('protocol', 'protocolPwpDevices'));
         }
 
         if ($protocol->system->slug === 'bramy-i-grodzie-przeciwpozarowe') {
             $protocolFireGateDevices = $protocol->fireGateDevices()->orderBy('system_number')->orderBy('id')->get();
-            return view('protocols.step3', compact('protocol', 'protocolFireGateDevices', 'lastProtocolNotes'));
+            return view('protocols.step3', compact('protocol', 'protocolFireGateDevices'));
         }
 
         // Dla innych systemów (placeholder)
