@@ -272,7 +272,7 @@
                 </div>
             </div>
 
-        @elseif($protocol->system->slug === 'klapy-poz')
+        @elseif($protocol->system->slug === 'klapy-pozarowe')
             @php
                 $dampers = $protocol->fireDampers()->orderBy('id')->get();
                 $stats = [

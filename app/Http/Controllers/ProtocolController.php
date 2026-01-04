@@ -191,7 +191,7 @@ class ProtocolController extends Controller
             return view('protocols.step2', compact('protocol', 'protocolDoors'));
         }
 
-        if ($protocol->system->slug === 'klapy-poz') {
+        if ($protocol->system->slug === 'klapy-pozarowe') {
             $protocolDampers = $protocol->fireDampers()->orderBy('id')->get();
 
             if ($protocolDampers->isEmpty()) {
@@ -266,7 +266,7 @@ class ProtocolController extends Controller
             return view('protocols.step3', compact('protocol', 'protocolDoors'));
         }
 
-        if ($protocol->system->slug === 'klapy-poz') {
+        if ($protocol->system->slug === 'klapy-pozarowe') {
             $protocolDampers = $protocol->fireDampers()->orderBy('id')->get();
             return view('protocols.step3', compact('protocol', 'protocolDampers'));
         }
@@ -331,7 +331,7 @@ class ProtocolController extends Controller
             }
         }
 
-        if ($protocol->system->slug === 'klapy-poz') {
+        if ($protocol->system->slug === 'klapy-pozarowe') {
             $validated = $request->validate([
                 'dampers' => 'array',
                 'dampers.*.id' => 'required|exists:protocol_fire_dampers,id',
@@ -447,7 +447,7 @@ class ProtocolController extends Controller
             $previewData = compact('doors', 'stats', 'statuses', 'totals');
         }
 
-        if ($protocol->system->slug === 'klapy-poz') {
+        if ($protocol->system->slug === 'klapy-pozarowe') {
             $dampers = $protocol->fireDampers()->orderBy('id')->get();
 
             $stats = [

@@ -30,7 +30,7 @@
                         <div class="mb-6">
                             @livewire('protocol-doors-manager', ['protocol' => $protocol])
                         </div>
-                    @elseif($protocol->system->slug === 'klapy-poz')
+                    @elseif($protocol->system->slug === 'klapy-pozarowe')
                         <div class="mb-6">
                             @livewire('protocol-fire-dampers-manager', ['protocol' => $protocol])
                         </div>

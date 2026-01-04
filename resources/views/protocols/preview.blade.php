@@ -68,7 +68,6 @@
                             <p><strong>{{ __('Uwagi końcowe:') }}</strong> {{ $protocol->data['final_notes'] ?? __('Brak') }}</p>
                         </div>
 
-                        <!-- Sekcja Drzwi (jeśli system to drzwi) -->
                         @if($protocol->system->slug === 'drzwi-przeciwpozarowe')
                             <div class="mt-8">
                                 <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Raport Szczegółowy') }}</h3>
@@ -143,11 +142,8 @@
                             </div>
                         @endif
 
-                            </div>
-                        @endif
-
                         <!-- Sekcja Klap (jeśli system to klapy) -->
-                        @if($protocol->system->slug === 'klapy-poz')
+                        @if($protocol->system->slug === 'klapy-pozarowe')
                             <div class="mt-8">
                                 <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Raport Szczegółowy') }}</h3>
                                 <div class="overflow-x-auto">
