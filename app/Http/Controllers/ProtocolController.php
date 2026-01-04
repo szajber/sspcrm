@@ -9,7 +9,9 @@ use App\Models\ProtocolTemplate;
 use App\Models\System;
 use App\Models\FireExtinguisher;
 use App\Models\ProtocolFireExtinguisher;
-use Illuminate\Support\Str;
+    use App\Models\Door;
+    use App\Models\ProtocolDoor;
+    use Illuminate\Support\Str;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -143,6 +145,50 @@ class ProtocolController extends Controller
             return view('protocols.step2', compact('protocol', 'protocolExtinguishers'));
         }
 
+        if ($protocol->system->slug === 'drzwi-przeciwpozarowe') {
+            $protocolDoors = $protocol->doors()->orderBy('id')->get();
+
+            if ($protocolDoors->isEmpty()) {
+                $lastProtocol = Protocol::where('client_object_id', $protocol->clientObject->id)
+                    ->where('system_id', $protocol->system->id)
+                    ->where('id', '<', $protocol->id)
+                    ->orderBy('date', 'desc')
+                    ->first();
+
+                if ($lastProtocol && $lastProtocol->doors()->exists()) {
+                    foreach ($lastProtocol->doors as $prevDoor) {
+                        $inventoryItem = Door::find($prevDoor->door_id);
+                        if ($inventoryItem && $inventoryItem->is_active) {
+                            $protocol->doors()->create([
+                                'door_id' => $prevDoor->door_id,
+                                'resistance_class' => $prevDoor->resistance_class,
+                                'location' => $prevDoor->location,
+                                'status' => $prevDoor->status,
+                                'notes' => $prevDoor->notes,
+                            ]);
+                        }
+                    }
+                } else {
+                    $inventory = Door::where('client_object_id', $protocol->clientObject->id)
+                        ->where('is_active', true)
+                        ->orderBy('sort_order')
+                        ->get();
+
+                    foreach ($inventory as $item) {
+                        $protocol->doors()->create([
+                            'door_id' => $item->id,
+                            'resistance_class' => $item->resistance_class,
+                            'location' => $item->location,
+                            'status' => 'sprawne',
+                        ]);
+                    }
+                }
+                $protocolDoors = $protocol->doors()->orderBy('id')->get();
+            }
+
+            return view('protocols.step2', compact('protocol', 'protocolDoors'));
+        }
+
         return view('protocols.step2', compact('protocol'));
     }
 
@@ -167,6 +213,11 @@ class ProtocolController extends Controller
             return view('protocols.step3', compact('protocol', 'protocolExtinguishers'));
         }
 
+        if ($protocol->system->slug === 'drzwi-przeciwpozarowe') {
+            $protocolDoors = $protocol->doors()->orderBy('id')->get();
+            return view('protocols.step3', compact('protocol', 'protocolDoors'));
+        }
+
         // Dla innych systemów (placeholder)
         return redirect()->route('protocols.preview', $protocol);
     }
@@ -186,7 +237,7 @@ class ProtocolController extends Controller
                 $extinguisher = ProtocolFireExtinguisher::where('id', $data['id'])
                     ->where('protocol_id', $protocol->id)
                     ->first();
-                    
+
                 if ($extinguisher) {
                     $extinguisher->update([
                         'status' => $data['status'],
@@ -201,6 +252,28 @@ class ProtocolController extends Controller
                             $inventory->update(['next_service_year' => $data['next_service_year']]);
                         }
                     }
+                }
+            }
+        }
+
+        if ($protocol->system->slug === 'drzwi-przeciwpozarowe') {
+            $validated = $request->validate([
+                'doors' => 'array',
+                'doors.*.id' => 'required|exists:protocol_doors,id',
+                'doors.*.status' => 'required|in:sprawne,niesprawne',
+                'doors.*.notes' => 'nullable|string',
+            ]);
+
+            foreach ($validated['doors'] as $data) {
+                $door = ProtocolDoor::where('id', $data['id'])
+                    ->where('protocol_id', $protocol->id)
+                    ->first();
+
+                if ($door) {
+                    $door->update([
+                        'status' => $data['status'],
+                        'notes' => $data['notes'],
+                    ]);
                 }
             }
         }
@@ -256,6 +329,39 @@ class ProtocolController extends Controller
             }
 
             $previewData = compact('extinguishers', 'stats', 'statuses', 'totals');
+        }
+
+        if ($protocol->system->slug === 'drzwi-przeciwpozarowe') {
+            $doors = $protocol->doors()->orderBy('id')->get();
+
+            $stats = [];
+            $statuses = [
+                'sprawne' => 'Sprawne',
+                'niesprawne' => 'Niesprawne'
+            ];
+
+            foreach ($doors as $door) {
+                $type = $door->resistance_class ?? 'Brak klasy';
+                if (!isset($stats[$type])) {
+                    $stats[$type] = array_fill_keys(array_keys($statuses), 0);
+                    $stats[$type]['total'] = 0;
+                }
+                $stats[$type][$door->status]++;
+                $stats[$type]['total']++;
+            }
+
+            $totals = array_fill_keys(array_keys($statuses), 0);
+            $totals['total'] = 0;
+            foreach ($stats as $typeStats) {
+                foreach ($typeStats as $key => $val) {
+                    if ($key !== 'total') {
+                         $totals[$key] += $val;
+                    }
+                }
+                $totals['total'] += $typeStats['total'];
+            }
+
+            $previewData = compact('doors', 'stats', 'statuses', 'totals');
         }
 
         return view('protocols.preview', compact('protocol', 'template') + $previewData);

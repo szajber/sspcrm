@@ -68,6 +68,81 @@
                             <p><strong>{{ __('Uwagi końcowe:') }}</strong> {{ $protocol->data['final_notes'] ?? __('Brak') }}</p>
                         </div>
 
+                        <!-- Sekcja Drzwi (jeśli system to drzwi) -->
+                        @if($protocol->system->slug === 'drzwi-przeciwpozarowe')
+                            <div class="mt-8">
+                                <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Raport Szczegółowy') }}</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Lp.</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Klasa odporności</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Lokalizacja</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Stan</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Uwagi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            @foreach($doors as $index => $item)
+                                                <tr>
+                                                    <td class="px-3 py-2 whitespace-nowrap text-gray-500">{{ $index + 1 }}</td>
+                                                    <td class="px-3 py-2 font-medium text-gray-900">{{ $item->resistance_class }}</td>
+                                                    <td class="px-3 py-2 text-gray-500">{{ $item->location }}</td>
+                                                    <td class="px-3 py-2">
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                                            {{ $item->status === 'sprawne' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                            {{ $statuses[$item->status] ?? $item->status }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-3 py-2 text-gray-500 text-xs">{{ $item->notes }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="mt-8 page-break-inside-avoid">
+                                <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Podsumowanie Ilościowe') }}</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-sm border">
+                                        <thead class="bg-gray-100">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-700 border-r">Klasa odporności</th>
+                                                <th class="px-3 py-2 text-center font-bold text-gray-900 border-r">Ilość (Suma)</th>
+                                                @foreach($statuses as $key => $label)
+                                                    <th class="px-3 py-2 text-center font-medium text-gray-500 border-r">{{ $label }}</th>
+                                                @endforeach
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            @foreach($stats as $type => $data)
+                                                <tr class="hover:bg-gray-50">
+                                                    <td class="px-3 py-2 font-medium text-gray-900 border-r">{{ $type }}</td>
+                                                    <td class="px-3 py-2 text-center font-bold text-indigo-600 border-r">{{ $data['total'] }}</td>
+                                                    @foreach($statuses as $key => $label)
+                                                        <td class="px-3 py-2 text-center text-gray-500 border-r">
+                                                            {{ $data[$key] > 0 ? $data[$key] : '-' }}
+                                                        </td>
+                                                    @endforeach
+                                                </tr>
+                                            @endforeach
+                                            <tr class="bg-gray-50 font-bold border-t-2 border-gray-300">
+                                                <td class="px-3 py-2 text-gray-900 border-r">SUMA</td>
+                                                <td class="px-3 py-2 text-center text-indigo-800 border-r">{{ $totals['total'] }}</td>
+                                                @foreach($statuses as $key => $label)
+                                                    <td class="px-3 py-2 text-center text-gray-700 border-r">
+                                                        {{ $totals[$key] > 0 ? $totals[$key] : '-' }}
+                                                    </td>
+                                                @endforeach
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        @endif
+
                         <!-- Sekcja Gaśnic (jeśli system to gaśnice) -->
                         @if($protocol->system->slug === 'gasnice')
                             <div class="mt-8">

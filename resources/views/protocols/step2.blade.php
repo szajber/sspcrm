@@ -23,11 +23,15 @@
                     </div>
 
                     @if($protocol->system->slug === 'gasnice')
-                            <div class="mb-6">
-                                @livewire('protocol-fire-extinguishers-manager', ['protocol' => $protocol])
-                            </div>
-                        @else
-                            <div class="text-center py-10">
+                        <div class="mb-6">
+                            @livewire('protocol-fire-extinguishers-manager', ['protocol' => $protocol])
+                        </div>
+                    @elseif($protocol->system->slug === 'drzwi-przeciwpozarowe')
+                        <div class="mb-6">
+                            @livewire('protocol-doors-manager', ['protocol' => $protocol])
+                        </div>
+                    @else
+                        <div class="text-center py-10">
                                 <h3 class="text-lg font-medium text-gray-900">{{ __('Dane szczegółowe systemu') }}</h3>
                                 <p class="text-gray-500 mt-2">{{ __('(Formularz specyficzny dla systemu: ') . $protocol->system->name . __(' - w budowie)') }}</p>
                             </div>

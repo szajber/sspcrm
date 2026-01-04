@@ -172,7 +172,107 @@
     <div class="content-section">
         <div class="label">Raport Szczegółowy</div>
 
-        @if($protocol->system->slug === 'gasnice')
+        @if($protocol->system->slug === 'drzwi-przeciwpozarowe')
+            @php
+                $doors = $protocol->doors()->orderBy('id')->get();
+                $stats = [];
+                $statuses = [
+                    'sprawne' => 'Sprawne',
+                    'niesprawne' => 'Niesprawne'
+                ];
+
+                foreach ($doors as $door) {
+                    $type = $door->resistance_class ?? 'Brak klasy';
+                    if (!isset($stats[$type])) {
+                        $stats[$type] = array_fill_keys(array_keys($statuses), 0);
+                        $stats[$type]['total'] = 0;
+                    }
+                    $stats[$type][$door->status]++;
+                    $stats[$type]['total']++;
+                }
+
+                $totals = array_fill_keys(array_keys($statuses), 0);
+                $totals['total'] = 0;
+                foreach ($stats as $typeStats) {
+                    foreach ($typeStats as $key => $val) {
+                        if ($key !== 'total') {
+                             $totals[$key] += $val;
+                        }
+                    }
+                    $totals['total'] += $typeStats['total'];
+                }
+            @endphp
+
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="border: 1px solid #ddd; padding: 5px;">Lp.</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Klasa odporności</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Lokalizacja</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Stan</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Uwagi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($doors as $index => $item)
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $index + 1 }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->resistance_class }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->location }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">
+                                {{ $statuses[$item->status] ?? $item->status }}
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->notes }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            <div class="page-break"></div>
+
+            <div class="label">Podsumowanie Ilościowe</div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="border: 1px solid #ddd; padding: 5px;">Klasa odporności</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Ilość (Suma)</th>
+                        @foreach($statuses as $key => $label)
+                            <th style="border: 1px solid #ddd; padding: 5px;">{{ $label }}</th>
+                        @endforeach
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($stats as $type => $data)
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 5px;">{{ $type }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center; font-weight: bold;">{{ $data['total'] }}</td>
+                            @foreach($statuses as $key => $label)
+                                <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">
+                                    {{ $data[$key] > 0 ? $data[$key] : '-' }}
+                                </td>
+                            @endforeach
+                        </tr>
+                    @endforeach
+                    <tr style="background-color: #f9f9f9; font-weight: bold;">
+                        <td style="border: 1px solid #ddd; padding: 5px;">SUMA</td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $totals['total'] }}</td>
+                        @foreach($statuses as $key => $label)
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">
+                                {{ $totals[$key] > 0 ? $totals[$key] : '-' }}
+                            </td>
+                        @endforeach
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="content-section">
+                <div class="label">Uwagi Końcowe</div>
+                <div style="border: 1px solid #ddd; padding: 10px; min-height: 50px;">
+                    {{ $protocol->data['final_notes'] ?? 'Brak uwag.' }}
+                </div>
+            </div>
+
+        @elseif($protocol->system->slug === 'gasnice')
             @php
                 $extinguishers = $protocol->fireExtinguishers()->orderBy('id')->get();
                 // Group stats

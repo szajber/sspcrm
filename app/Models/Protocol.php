@@ -48,4 +48,9 @@ class Protocol extends Model
     {
         return $this->hasMany(ProtocolFireExtinguisher::class);
     }
+
+    public function doors()
+    {
+        return $this->hasMany(ProtocolDoor::class);
+    }
 }

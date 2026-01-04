@@ -27,6 +27,8 @@
 
                         @if($protocol->system->slug === 'gasnice')
                             @include('protocols.systems.fire-extinguishers', ['extinguishers' => $protocolExtinguishers])
+                        @elseif($protocol->system->slug === 'drzwi-przeciwpozarowe')
+                            @include('protocols.systems.doors', ['protocolDoors' => $protocolDoors])
                         @else
                             <div class="text-center py-10">
                                 <p class="text-gray-500">{{ __('Brak dedykowanego formularza dla tego systemu.') }}</p>
