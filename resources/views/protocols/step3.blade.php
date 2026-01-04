@@ -45,6 +45,14 @@
                             </div>
                         @endif
 
+                        <div class="mt-8 border-t pt-6">
+                            <label for="final_notes" class="block text-sm font-medium text-gray-700 mb-2">{{ __('Uwagi ogólne do protokołu') }}</label>
+                            <div class="mt-1">
+                                <textarea id="final_notes" name="final_notes" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">{{ $protocol->data['final_notes'] ?? '' }}</textarea>
+                            </div>
+                            <p class="mt-2 text-sm text-gray-500">{{ __('Tutaj możesz wpisać ogólne uwagi dotyczące całego przeglądu, które pojawią się na końcu protokołu.') }}</p>
+                        </div>
+
                         <div class="flex items-center justify-end mt-6 space-x-3">
                             <a href="{{ route('protocols.step2', $protocol) }}" class="text-gray-600 hover:text-gray-900 underline">
                                 {{ __('Wstecz') }}
@@ -58,4 +66,20 @@
             </div>
         </div>
     </div>
+
+    <!-- TinyMCE -->
+    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            tinymce.init({
+                selector: '#final_notes',
+                plugins: 'advlist autolink lists link image charmap preview anchor pagebreak',
+                toolbar: 'undo redo | formatselect | bold italic backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | removeformat | help',
+                toolbar_mode: 'floating',
+                height: 300,
+                menubar: false,
+                language: 'pl'
+            });
+        });
+    </script>
 </x-app-layout>

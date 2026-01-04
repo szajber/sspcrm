@@ -268,7 +268,7 @@
             <div class="content-section">
                 <div class="label">Uwagi Końcowe</div>
                 <div style="border: 1px solid #ddd; padding: 10px; min-height: 50px;">
-                    {{ $protocol->data['final_notes'] ?? 'Brak uwag.' }}
+                    {!! $protocol->data['final_notes'] ?? 'Brak uwag.' !!}
                 </div>
             </div>
 
@@ -338,7 +338,7 @@
             <div class="content-section">
                 <div class="label">Uwagi Końcowe</div>
                 <div style="border: 1px solid #ddd; padding: 10px; min-height: 50px;">
-                    {{ $protocol->data['final_notes'] ?? 'Brak uwag.' }}
+                    {!! $protocol->data['final_notes'] ?? 'Brak uwag.' !!}
                 </div>
             </div>
 
@@ -410,7 +410,7 @@
             <div class="content-section">
                 <div class="label">Uwagi Końcowe</div>
                 <div style="border: 1px solid #ddd; padding: 10px; min-height: 50px;">
-                    {{ $protocol->data['final_notes'] ?? 'Brak uwag.' }}
+                    {!! $protocol->data['final_notes'] ?? 'Brak uwag.' !!}
                 </div>
             </div>
 
@@ -493,7 +493,7 @@
             <div class="content-section">
                 <div class="label">Uwagi Końcowe</div>
                 <div style="border: 1px solid #ddd; padding: 10px; min-height: 50px;">
-                    {{ $protocol->data['final_notes'] ?? 'Brak uwag.' }}
+                    {!! $protocol->data['final_notes'] ?? 'Brak uwag.' !!}
                 </div>
             </div>
 
@@ -517,7 +517,7 @@
                         <th style="border: 1px solid #ddd; padding: 5px;">System</th>
                         <th style="border: 1px solid #ddd; padding: 5px;">Urządzenie</th>
                         <th style="border: 1px solid #ddd; padding: 5px;">Lokalizacja</th>
-                        <th style="border: 1px solid #ddd; padding: 5px;">Sprawdzenia</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Elementy</th>
                         <th style="border: 1px solid #ddd; padding: 5px;">Wynik</th>
                         <th style="border: 1px solid #ddd; padding: 5px;">Uwagi</th>
                     </tr>
@@ -571,7 +571,7 @@
             <div class="content-section">
                 <div class="label">Uwagi Końcowe</div>
                 <div style="border: 1px solid #ddd; padding: 10px; min-height: 50px;">
-                    {{ $protocol->data['final_notes'] ?? 'Brak uwag.' }}
+                    {!! $protocol->data['final_notes'] ?? 'Brak uwag.' !!}
                 </div>
             </div>
 
@@ -597,7 +597,7 @@
                         <th style="border: 1px solid #ddd; padding: 5px;">System</th>
                         <th style="border: 1px solid #ddd; padding: 5px;">Urządzenie</th>
                         <th style="border: 1px solid #ddd; padding: 5px;">Lokalizacja</th>
-                        <th style="border: 1px solid #ddd; padding: 5px;">Sprawdzenia</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Elementy</th>
                         <th style="border: 1px solid #ddd; padding: 5px;">Wynik</th>
                         <th style="border: 1px solid #ddd; padding: 5px;">Uwagi</th>
                     </tr>
@@ -620,13 +620,15 @@
                             <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->location }}</td>
                             <td style="border: 1px solid #ddd; padding: 5px; font-size: 9px;">
                                 @if($item->type === 'gate')
-                                    Zadziałanie: {{ $item->result === 'positive' ? 'Tak' : 'Nie' }}
+                                    Przeciwwaga: {{ $item->check_counterweight ? 'Tak' : 'Nie' }}<br>
+                                    Sprzęgło magn.: {{ $item->check_magnetic_clutch ? 'Tak' : 'Nie' }}<br>
+                                    Trzymacz magn.: {{ $item->check_holding_mechanism ? 'Tak' : 'Nie' }}<br>
+                                    Silnik: {{ $item->check_drive ? 'Tak' : 'Nie' }}
                                 @else
                                     Czujki: {{ $item->check_detectors ? 'Tak' : 'Nie' }}<br>
                                     Przyciski: {{ $item->check_buttons ? 'Tak' : 'Nie' }}<br>
+                                    Przycisk test: {{ $item->check_test_button ? 'Tak' : 'Nie' }}<br>
                                     Sygnalizatory: {{ $item->check_signalers ? 'Tak' : 'Nie' }}<br>
-                                    Trzymacz: {{ $item->check_holding_mechanism ? 'Tak' : 'Nie' }}<br>
-                                    @if($item->check_drive)Silnik: Tak<br>@endif
                                     @if($item->battery_date)Akumulatory: {{ $item->battery_date }}@endif
                                 @endif
                             </td>
@@ -670,7 +672,7 @@
             <div class="content-section">
                 <div class="label">Uwagi Końcowe</div>
                 <div style="border: 1px solid #ddd; padding: 10px; min-height: 50px;">
-                    {{ $protocol->data['final_notes'] ?? 'Brak uwag.' }}
+                    {!! $protocol->data['final_notes'] ?? 'Brak uwag.' !!}
                 </div>
             </div>
 
@@ -778,7 +780,7 @@
                 <div class="label">Uwagi Końcowe</div>
                 <div style="border: 1px solid #ddd; padding: 10px; min-height: 50px;">
                     <!-- Placeholder na uwagi edytowalne w przyszłości, na razie puste lub z pola data -->
-                    {{ $protocol->data['final_notes'] ?? 'Brak uwag.' }}
+                    {!! $protocol->data['final_notes'] ?? 'Brak uwag.' !!}
                 </div>
             </div>
 

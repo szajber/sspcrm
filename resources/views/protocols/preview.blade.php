@@ -65,7 +65,10 @@
                         </div>
 
                         <div class="mb-8">
-                            <p><strong>{{ __('Uwagi końcowe:') }}</strong> {{ $protocol->data['final_notes'] ?? __('Brak') }}</p>
+                            <h3 class="font-bold text-sm uppercase text-gray-500 mb-2">{{ __('UWAGI KOŃCOWE') }}</h3>
+                            <div class="prose max-w-none text-sm">
+                                {!! $protocol->data['final_notes'] ?? __('Brak') !!}
+                            </div>
                         </div>
 
                         @if($protocol->system->slug === 'drzwi-przeciwpozarowe')
@@ -348,7 +351,7 @@
                                                 <th class="px-3 py-2 text-left font-medium text-gray-500">System</th>
                                                 <th class="px-3 py-2 text-left font-medium text-gray-500">Urządzenie</th>
                                                 <th class="px-3 py-2 text-left font-medium text-gray-500">Lokalizacja</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Sprawdzenia</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Elementy</th>
                                                 <th class="px-3 py-2 text-left font-medium text-gray-500">Wynik</th>
                                                 <th class="px-3 py-2 text-left font-medium text-gray-500">Uwagi</th>
                                             </tr>
@@ -403,9 +406,6 @@
                             </div>
                         @endif
 
-                            </div>
-                        @endif
-
                         <!-- Sekcja Bram (jeśli system to Bramy) -->
                         @if($protocol->system->slug === 'bramy-i-grodzie-przeciwpozarowe')
                             <div class="mt-8">
@@ -418,7 +418,7 @@
                                                 <th class="px-3 py-2 text-left font-medium text-gray-500">System</th>
                                                 <th class="px-3 py-2 text-left font-medium text-gray-500">Urządzenie</th>
                                                 <th class="px-3 py-2 text-left font-medium text-gray-500">Lokalizacja</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Sprawdzenia</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Elementy</th>
                                                 <th class="px-3 py-2 text-left font-medium text-gray-500">Wynik</th>
                                                 <th class="px-3 py-2 text-left font-medium text-gray-500">Uwagi</th>
                                             </tr>
@@ -441,13 +441,15 @@
                                                     <td class="px-3 py-2 text-gray-500">{{ $item->location }}</td>
                                                     <td class="px-3 py-2 text-xs text-gray-500">
                                                         @if($item->type === 'gate')
-                                                            <div>Zadziałanie: {{ $item->result === 'positive' ? 'Tak' : 'Nie' }}</div>
+                                                            <div>Przeciwwaga: {{ $item->check_counterweight ? 'Tak' : 'Nie' }}</div>
+                                                            <div>Sprzęgło magn.: {{ $item->check_magnetic_clutch ? 'Tak' : 'Nie' }}</div>
+                                                            <div>Trzymacz magn.: {{ $item->check_holding_mechanism ? 'Tak' : 'Nie' }}</div>
+                                                            <div>Silnik: {{ $item->check_drive ? 'Tak' : 'Nie' }}</div>
                                                         @else
                                                             <div>Czujki: {{ $item->check_detectors ? 'Tak' : 'Nie' }}</div>
                                                             <div>Przyciski: {{ $item->check_buttons ? 'Tak' : 'Nie' }}</div>
+                                                            <div>Przycisk test: {{ $item->check_test_button ? 'Tak' : 'Nie' }}</div>
                                                             <div>Sygnalizatory: {{ $item->check_signalers ? 'Tak' : 'Nie' }}</div>
-                                                            <div>Trzymacz: {{ $item->check_holding_mechanism ? 'Tak' : 'Nie' }}</div>
-                                                            @if($item->check_drive)<div>Silnik: Tak</div>@endif
                                                             @if($item->battery_date)<div>Akumulatory: {{ $item->battery_date }}</div>@endif
                                                         @endif
                                                     </td>

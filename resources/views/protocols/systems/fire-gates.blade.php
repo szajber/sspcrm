@@ -6,7 +6,7 @@
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('System') }}</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Urządzenie') }}</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Lokalizacja') }}</th>
-                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Sprawdzenia') }}</th>
+                <th class="px-4 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Elementy') }}</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Wynik') }}</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Uwagi') }}</th>
             </tr>
@@ -36,12 +36,23 @@
                     </td>
                     <td class="px-4 py-3 text-sm text-gray-700">
                         @if($item->type === 'gate')
-                            <div class="flex items-center space-x-2">
-                                <span class="text-xs">{{ __('Zadziałanie:') }}</span>
-                                <select name="items[{{ $index }}][result]" class="text-xs border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm">
-                                    <option value="positive" {{ $item->result === 'positive' ? 'selected' : '' }}>{{ __('Sprawny') }}</option>
-                                    <option value="negative" {{ $item->result === 'negative' ? 'selected' : '' }}>{{ __('Niesprawny') }}</option>
-                                </select>
+                            <div class="grid grid-cols-2 gap-2">
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" name="items[{{ $index }}][check_counterweight]" value="1" {{ $item->check_counterweight ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    <span class="text-xs">{{ __('Przeciwwaga') }}</span>
+                                </label>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" name="items[{{ $index }}][check_magnetic_clutch]" value="1" {{ $item->check_magnetic_clutch ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    <span class="text-xs">{{ __('Sprzęgło magn.') }}</span>
+                                </label>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" name="items[{{ $index }}][check_holding_mechanism]" value="1" {{ $item->check_holding_mechanism ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    <span class="text-xs">{{ __('Trzymacz magn.') }}</span>
+                                </label>
+                                <label class="flex items-center space-x-2">
+                                    <input type="checkbox" name="items[{{ $index }}][check_drive]" value="1" {{ $item->check_drive ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    <span class="text-xs">{{ __('Silnik') }}</span>
+                                </label>
                             </div>
                         @else
                             <div class="grid grid-cols-2 gap-2">
@@ -54,16 +65,12 @@
                                     <span class="text-xs">{{ __('Przyciski') }}</span>
                                 </label>
                                 <label class="flex items-center space-x-2">
-                                    <input type="checkbox" name="items[{{ $index }}][check_signalers]" value="1" {{ $item->check_signalers ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                    <span class="text-xs">{{ __('Sygnalizatory') }}</span>
+                                    <input type="checkbox" name="items[{{ $index }}][check_test_button]" value="1" {{ $item->check_test_button ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    <span class="text-xs">{{ __('Przycisk test') }}</span>
                                 </label>
                                 <label class="flex items-center space-x-2">
-                                    <input type="checkbox" name="items[{{ $index }}][check_holding_mechanism]" value="1" {{ $item->check_holding_mechanism ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                    <span class="text-xs">{{ __('Trzymacz') }}</span>
-                                </label>
-                                <label class="flex items-center space-x-2 col-span-2">
-                                    <input type="checkbox" name="items[{{ $index }}][check_drive]" value="1" {{ $item->check_drive ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
-                                    <span class="text-xs">{{ __('Silnik napędowy') }}</span>
+                                    <input type="checkbox" name="items[{{ $index }}][check_signalers]" value="1" {{ $item->check_signalers ? 'checked' : '' }} class="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50">
+                                    <span class="text-xs">{{ __('Sygnalizatory') }}</span>
                                 </label>
                                 <div class="col-span-2 mt-1">
                                     <span class="text-xs block">{{ __('Data akumulatorów:') }}</span>

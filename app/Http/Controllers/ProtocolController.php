@@ -422,6 +422,9 @@ class ProtocolController extends Controller
                                 'check_signalers' => $prevItem->check_signalers,
                                 'check_holding_mechanism' => $prevItem->check_holding_mechanism,
                                 'check_drive' => $prevItem->check_drive,
+                                'check_counterweight' => $prevItem->check_counterweight,
+                                'check_magnetic_clutch' => $prevItem->check_magnetic_clutch,
+                                'check_test_button' => $prevItem->check_test_button,
                                 'battery_date' => $prevItem->battery_date,
                                 'result' => $prevItem->result,
                                 'notes' => $prevItem->notes,
@@ -684,9 +687,12 @@ class ProtocolController extends Controller
                 'items.*.id' => 'required|exists:protocol_fire_gate_devices,id',
                 'items.*.check_detectors' => 'nullable',
                 'items.*.check_buttons' => 'nullable',
+                'items.*.check_test_button' => 'nullable',
                 'items.*.check_signalers' => 'nullable',
                 'items.*.check_holding_mechanism' => 'nullable',
                 'items.*.check_drive' => 'nullable',
+                'items.*.check_counterweight' => 'nullable',
+                'items.*.check_magnetic_clutch' => 'nullable',
                 'items.*.battery_date' => 'nullable|string',
                 'items.*.result' => 'required|in:positive,negative',
                 'items.*.notes' => 'nullable|string',
@@ -701,15 +707,25 @@ class ProtocolController extends Controller
                     $item->update([
                         'check_detectors' => isset($data['check_detectors']),
                         'check_buttons' => isset($data['check_buttons']),
+                        'check_test_button' => isset($data['check_test_button']),
                         'check_signalers' => isset($data['check_signalers']),
                         'check_holding_mechanism' => isset($data['check_holding_mechanism']),
                         'check_drive' => isset($data['check_drive']),
+                        'check_counterweight' => isset($data['check_counterweight']),
+                        'check_magnetic_clutch' => isset($data['check_magnetic_clutch']),
                         'battery_date' => $data['battery_date'] ?? null,
                         'result' => $data['result'],
                         'notes' => $data['notes'],
                     ]);
                 }
             }
+        }
+
+        // Zapisz uwagi ogólne (wspólne dla wszystkich systemów)
+        if ($request->has('final_notes')) {
+            $data = $protocol->data ?? [];
+            $data['final_notes'] = $request->input('final_notes');
+            $protocol->update(['data' => $data]);
         }
 
         return redirect()->route('protocols.preview', $protocol);
