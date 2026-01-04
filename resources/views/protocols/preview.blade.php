@@ -31,9 +31,13 @@
                         <div class="grid grid-cols-2 gap-8 mb-8">
                             <div>
                                 <h3 class="font-bold text-sm uppercase text-gray-500 mb-2">{{ __('ZAMAWIAJĄCY') }}</h3>
-                                <p class="font-bold">{{ $protocol->clientObject->client->name }}</p>
-                                <p>{{ $protocol->clientObject->client->address }}</p>
-                                <p>{{ $protocol->clientObject->client->postal_code }} {{ $protocol->clientObject->client->city }}</p>
+                                @if($protocol->clientObject->client)
+                                    <p class="font-bold">{{ $protocol->clientObject->client->name }}</p>
+                                    <p>{{ $protocol->clientObject->client->address }}</p>
+                                    <p>{{ $protocol->clientObject->client->postal_code }} {{ $protocol->clientObject->client->city }}</p>
+                                @else
+                                    <p class="font-bold">{{ __('Brak przypisanego klienta') }}</p>
+                                @endif
                             </div>
                             <div>
                                 <h3 class="font-bold text-sm uppercase text-gray-500 mb-2">{{ __('OBIEKT') }}</h3>

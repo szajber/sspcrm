@@ -83,6 +83,122 @@ class ProtocolFireExtinguishersManager extends Component
         }
     }
 
+    public function moveUp10($id)
+    {
+        $current = ProtocolFireExtinguisher::find($id);
+        if (!$current || !$current->fire_extinguisher_id) return;
+
+        $currentInventory = FireExtinguisher::find($current->fire_extinguisher_id);
+        if (!$currentInventory) return;
+
+        // Znajdź 10 wcześniejszych elementów
+        $previousInventories = FireExtinguisher::where('client_object_id', $currentInventory->client_object_id)
+            ->where('sort_order', '<', $currentInventory->sort_order)
+            ->orderBy('sort_order', 'desc')
+            ->take(10)
+            ->get();
+
+        if ($previousInventories->isEmpty()) return;
+
+        $targetInventory = $previousInventories->last();
+        
+        // Przesuń target i wszystko po nim (do current) w dół o 1
+        // A current wstaw na miejsce target
+        
+        // Prostszą metodą przy sort_order liczbowym unikalnym jest zamiana miejscami
+        // ale to może być mylące przy skoku o 10.
+        // Najbezpieczniej jest wykonać serię zamian lub przenumerować.
+        // Dla uproszczenia UX, zróbmy pętlę zamian.
+        
+        $steps = $previousInventories->count();
+        $tempOrder = $currentInventory->sort_order;
+        
+        // Pobierz wszystkie elementy pomiędzy (włącznie z target i current)
+        $range = FireExtinguisher::where('client_object_id', $currentInventory->client_object_id)
+            ->where('sort_order', '>=', $targetInventory->sort_order)
+            ->where('sort_order', '<=', $currentInventory->sort_order)
+            ->orderBy('sort_order', 'asc')
+            ->get();
+            
+        // Logika: element ostatni (current) idzie na początek
+        // reszta przesuwa się o 1 w dół
+        
+        if ($range->count() > 1) {
+            $currentVal = $range->last();
+            $targetOrder = $range->first()->sort_order;
+            
+            // Przesuwamy wszystkie oprócz ostatniego o jeden w górę (w sensie wartości sort_order)
+            // Czekaj, sort_order rośnie w dół listy.
+            // Więc żeby przesunąć w dół listy, zwiększamy sort_order.
+            
+            // Chcemy przenieść current (ostatni w range) na miejsce pierwszego w range.
+            // A pozostałe przesunąć o 1 w dół (zwiększyć sort_order).
+            
+            // Najpierw ustawiamy current na tymczasową wartość spoza zakresu żeby nie było kolizji unique (jeśli jest)
+            // Ale tutaj nie ma unique constraint w bazie na sort_order, więc możemy nadpisywać.
+            
+            // Pobieramy IDki w kolejności
+            $ids = $range->pluck('id')->toArray();
+            $orders = $range->pluck('sort_order')->toArray();
+            
+            // Ostatni ID (current)
+            $currentId = array_pop($ids);
+            
+            // Wstawiamy go na początek
+            array_unshift($ids, $currentId);
+            
+            // Teraz mamy nową kolejność IDków, przypisujemy im stare ordery
+            foreach ($ids as $index => $id) {
+                FireExtinguisher::where('id', $id)->update(['sort_order' => $orders[$index]]);
+            }
+        }
+    }
+
+    public function moveDown10($id)
+    {
+        $current = ProtocolFireExtinguisher::find($id);
+        if (!$current || !$current->fire_extinguisher_id) return;
+
+        $currentInventory = FireExtinguisher::find($current->fire_extinguisher_id);
+        if (!$currentInventory) return;
+
+        // Znajdź 10 następnych elementów
+        $nextInventories = FireExtinguisher::where('client_object_id', $currentInventory->client_object_id)
+            ->where('sort_order', '>', $currentInventory->sort_order)
+            ->orderBy('sort_order', 'asc')
+            ->take(10)
+            ->get();
+
+        if ($nextInventories->isEmpty()) return;
+
+        $targetInventory = $nextInventories->last();
+        
+        $range = FireExtinguisher::where('client_object_id', $currentInventory->client_object_id)
+            ->where('sort_order', '>=', $currentInventory->sort_order)
+            ->where('sort_order', '<=', $targetInventory->sort_order)
+            ->orderBy('sort_order', 'asc')
+            ->get();
+
+        if ($range->count() > 1) {
+            // Logika: element pierwszy (current) idzie na koniec
+            // reszta przesuwa się o 1 w górę (zmniejsza sort_order)
+            
+            $ids = $range->pluck('id')->toArray();
+            $orders = $range->pluck('sort_order')->toArray();
+            
+            // Pierwszy ID (current)
+            $currentId = array_shift($ids);
+            
+            // Wstawiamy go na koniec
+            array_push($ids, $currentId);
+            
+            // Aktualizacja
+            foreach ($ids as $index => $id) {
+                FireExtinguisher::where('id', $id)->update(['sort_order' => $orders[$index]]);
+            }
+        }
+    }
+
     public function openModal()
     {
         $this->resetForm();
@@ -130,6 +246,26 @@ class ProtocolFireExtinguishersManager extends Component
             'location' => 'nullable|string|max:255',
         ]);
 
+        // Automatyczne dodawanie nowego typu do słownika
+        if (empty($this->type_id) && !empty($this->custom_type)) {
+            // Sprawdź czy taki typ już istnieje (case-insensitive)
+            $existingType = FireExtinguisherType::where('name', $this->custom_type)->first();
+
+            if ($existingType) {
+                $this->type_id = $existingType->id;
+            } else {
+                // Utwórz nowy typ
+                $newType = FireExtinguisherType::create([
+                    'name' => $this->custom_type,
+                    'description' => 'Dodano automatycznie podczas tworzenia protokołu.'
+                ]);
+                $this->type_id = $newType->id;
+                
+                // Odśwież listę typów w komponencie
+                $this->types = FireExtinguisherType::orderBy('name')->get();
+            }
+        }
+
         $typeName = '';
         if ($this->type_id) {
             $type = FireExtinguisherType::find($this->type_id);
@@ -137,6 +273,11 @@ class ProtocolFireExtinguishersManager extends Component
         } else {
             $typeName = $this->custom_type;
         }
+
+        // Jeśli udało się ustalić type_id, to czyścimy custom_type dla inwentarza (bo preferujemy relację)
+        // Ale dla ProtocolFireExtinguisher zapisujemy type_name tak czy siak.
+        $inventoryCustomType = $this->type_id ? null : $this->custom_type;
+        $inventoryTypeId = $this->type_id ?: null;
 
         if ($this->editingId) {
             // Edycja istniejącej pozycji w protokole
@@ -151,8 +292,8 @@ class ProtocolFireExtinguishersManager extends Component
                 $inventory = FireExtinguisher::find($extinguisher->fire_extinguisher_id);
                 if ($inventory) {
                     $inventory->update([
-                        'type_id' => $this->type_id ?: null,
-                        'custom_type' => $this->type_id ? null : $typeName,
+                        'type_id' => $inventoryTypeId,
+                        'custom_type' => $inventoryCustomType,
                         'location' => $this->location,
                     ]);
                 }
@@ -168,8 +309,8 @@ class ProtocolFireExtinguishersManager extends Component
             
             $inventory = FireExtinguisher::create([
                 'client_object_id' => $this->protocol->clientObject->id,
-                'type_id' => $this->type_id ?: null,
-                'custom_type' => $this->type_id ? null : $typeName,
+                'type_id' => $inventoryTypeId,
+                'custom_type' => $inventoryCustomType,
                 'location' => $this->location,
                 'sort_order' => $maxOrder + 1,
             ]);
@@ -190,6 +331,8 @@ class ProtocolFireExtinguishersManager extends Component
     {
         $original = ProtocolFireExtinguisher::find($id);
         if ($original) {
+            $new = null;
+
             // Klonujemy w inwentarzu
             if ($original->fire_extinguisher_id) {
                 $inventoryOrig = FireExtinguisher::find($original->fire_extinguisher_id);
@@ -210,6 +353,11 @@ class ProtocolFireExtinguishersManager extends Component
                  // Jeśli z jakiegoś powodu nie ma powiązania z inwentarzem (np. usunięta), to tylko w protokole
                  $new = $original->replicate();
                  $new->save();
+            }
+
+            // Otwórz edycję nowej gaśnicy
+            if ($new) {
+                $this->edit($new->id);
             }
         }
     }

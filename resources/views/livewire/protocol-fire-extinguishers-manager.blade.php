@@ -46,17 +46,30 @@
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <div class="flex items-center space-x-2">
-                                    <button wire:click="moveUp({{ $extinguisher->id }})" class="text-gray-500 hover:text-gray-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
-                                        </svg>
+                                    <div class="flex flex-col space-y-1">
+                                        <button wire:click="moveUp({{ $extinguisher->id }})" class="text-gray-500 hover:text-gray-700" title="{{ __('Przesuń w górę') }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 15l7-7 7 7" />
+                                            </svg>
+                                        </button>
+                                        <button wire:click="moveUp10({{ $extinguisher->id }})" class="text-xs text-gray-400 hover:text-gray-600" title="{{ __('Przesuń o 10 w górę') }}">
+                                            +10
+                                        </button>
+                                    </div>
+                                    <div class="flex flex-col space-y-1">
+                                        <button wire:click="moveDown({{ $extinguisher->id }})" class="text-gray-500 hover:text-gray-700" title="{{ __('Przesuń w dół') }}">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+                                            </svg>
+                                        </button>
+                                        <button wire:click="moveDown10({{ $extinguisher->id }})" class="text-xs text-gray-400 hover:text-gray-600" title="{{ __('Przesuń o 10 w dół') }}">
+                                            -10
+                                        </button>
+                                    </div>
+                                    <button wire:click="clone({{ $extinguisher->id }})" class="text-green-600 hover:text-green-900 ml-2">
+                                        {{ __('Klonuj') }}
                                     </button>
-                                    <button wire:click="moveDown({{ $extinguisher->id }})" class="text-gray-500 hover:text-gray-700">
-                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
-                                        </svg>
-                                    </button>
-                                    <button wire:click="edit({{ $extinguisher->id }})" class="text-indigo-600 hover:text-indigo-900">
+                                    <button wire:click="edit({{ $extinguisher->id }})" class="text-indigo-600 hover:text-indigo-900 ml-2">
                                         {{ __('Edytuj') }}
                                     </button>
                                     <button wire:click="delete({{ $extinguisher->id }})" class="text-red-600 hover:text-red-900">

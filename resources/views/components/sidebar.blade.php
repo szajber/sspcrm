@@ -81,6 +81,17 @@
                     {{ __('Protokoły') }}
                 </a>
 
+                <!-- Urządzenia -->
+                <div class="px-2 py-2 text-xs font-semibold text-gray-500 uppercase tracking-wider pl-11 mt-2">
+                    {{ __('Urządzenia') }}
+                </div>
+
+                <a href="{{ route('settings.fire-extinguisher-types.index') }}" class="{{ request()->routeIs('settings.fire-extinguisher-types.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md pl-11">
+                    {{ __('Gaśnice') }}
+                </a>
+
+                <div class="border-t border-gray-700 my-2 mx-4"></div>
+
                 <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md pl-11">
                     {{ __('Użytkownicy') }}
                 </a>

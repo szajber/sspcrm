@@ -123,9 +123,13 @@
     <div class="info-section">
         <div class="info-col">
             <div class="label">Zamawiający</div>
-            <strong>{{ $protocol->clientObject->client->name }}</strong><br>
-            {{ $protocol->clientObject->client->address }}<br>
-            {{ $protocol->clientObject->client->postal_code }} {{ $protocol->clientObject->client->city }}
+            @if($protocol->clientObject->client)
+                <strong>{{ $protocol->clientObject->client->name }}</strong><br>
+                {{ $protocol->clientObject->client->address }}<br>
+                {{ $protocol->clientObject->client->postal_code }} {{ $protocol->clientObject->client->city }}
+            @else
+                <strong>Brak przypisanego klienta</strong>
+            @endif
         </div>
         <div class="info-col-right">
             <div class="label">Obiekt</div>

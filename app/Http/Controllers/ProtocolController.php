@@ -247,7 +247,10 @@ class ProtocolController extends Controller
             $totals['total'] = 0;
             foreach ($stats as $typeStats) {
                 foreach ($typeStats as $key => $val) {
-                    $totals[$key] += $val;
+                    // Pomijamy klucz 'total' w wewnętrznej pętli, bo on jest już zliczony w $stats
+                    if ($key !== 'total') {
+                         $totals[$key] += $val;
+                    }
                 }
                 $totals['total'] += $typeStats['total'];
             }
