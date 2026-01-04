@@ -31,7 +31,7 @@
                             @include('protocols.systems.doors', ['protocolDoors' => $protocolDoors])
                         @elseif($protocol->system->slug === 'klapy-pozarowe')
                             @include('protocols.systems.fire-dampers', ['protocolDampers' => $protocolDampers])
-                        @elseif($protocol->system->slug === 'oddymianie')
+                        @elseif($protocol->system->slug === 'system-oddymiania')
                             @include('protocols.systems.smoke-extraction', ['protocolSmokeSystems' => $protocolSmokeSystems])
                         @else
                             <div class="text-center py-10">

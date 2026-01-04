@@ -239,7 +239,7 @@ class ProtocolController extends Controller
             return view('protocols.step2', compact('protocol', 'protocolDampers'));
         }
 
-        if ($protocol->system->slug === 'oddymianie') {
+        if ($protocol->system->slug === 'system-oddymiania') {
             $protocolSmokeSystems = $protocol->smokeExtractionSystems()->orderBy('id')->get();
 
             if ($protocolSmokeSystems->isEmpty()) {
@@ -327,7 +327,7 @@ class ProtocolController extends Controller
             return view('protocols.step3', compact('protocol', 'protocolDampers'));
         }
 
-        if ($protocol->system->slug === 'oddymianie') {
+        if ($protocol->system->slug === 'system-oddymiania') {
             $protocolSmokeSystems = $protocol->smokeExtractionSystems()->orderBy('id')->get();
             return view('protocols.step3', compact('protocol', 'protocolSmokeSystems'));
         }
@@ -422,7 +422,7 @@ class ProtocolController extends Controller
             }
         }
 
-        if ($protocol->system->slug === 'oddymianie') {
+        if ($protocol->system->slug === 'system-oddymiania') {
             $validated = $request->validate([
                 'systems' => 'array',
                 'systems.*.id' => 'required|exists:protocol_smoke_extraction_systems,id',
@@ -544,7 +544,7 @@ class ProtocolController extends Controller
             $previewData = compact('dampers', 'stats');
         }
 
-        if ($protocol->system->slug === 'oddymianie') {
+        if ($protocol->system->slug === 'system-oddymiania') {
             $smokeSystems = $protocol->smokeExtractionSystems()->orderBy('id')->get();
 
             $stats = [

@@ -342,7 +342,7 @@
                 </div>
             </div>
 
-        @elseif($protocol->system->slug === 'oddymianie')
+        @elseif($protocol->system->slug === 'system-oddymiania')
             @php
                 $smokeSystems = $protocol->smokeExtractionSystems()->orderBy('id')->get();
                 $stats = [

@@ -208,7 +208,7 @@
                         @endif
 
                         <!-- Sekcja Oddymiania (jeśli system to oddymianie) -->
-                        @if($protocol->system->slug === 'oddymianie')
+                        @if($protocol->system->slug === 'system-oddymiania')
                             <div class="mt-8">
                                 <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Raport Szczegółowy') }}</h3>
                                 <div class="overflow-x-auto">
