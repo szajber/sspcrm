@@ -31,6 +31,10 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'job_title',
+        'phone',
+        'signature_path',
+        'is_active',
     ];
 
     /**
@@ -65,6 +69,7 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => UserRole::class,
+            'is_active' => 'boolean',
         ];
     }
 }

@@ -81,6 +81,46 @@
                 @endif
             @endif
         </div>
+
+        <!-- Job Title -->
+        <div class="col-span-6 sm:col-span-4">
+            <x-label for="job_title" value="{{ __('Job Title') }}" />
+            <x-input id="job_title" type="text" class="mt-1 block w-full" wire:model="state.job_title" />
+            <x-input-error for="job_title" class="mt-2" />
+        </div>
+
+        <!-- Phone -->
+        <div class="col-span-6 sm:col-span-4">
+            <x-label for="phone" value="{{ __('Phone') }}" />
+            <x-input id="phone" type="text" class="mt-1 block w-full" wire:model="state.phone" />
+            <x-input-error for="phone" class="mt-2" />
+        </div>
+
+        <!-- Signature -->
+        <div class="col-span-6 sm:col-span-4">
+            <x-label for="signature" value="{{ __('Signature') }}" />
+            <input type="file" id="signature" wire:model="signature" class="mt-1 block w-full" />
+            <x-input-error for="signature" class="mt-2" />
+
+            @if ($this->user->signature_path)
+                <div class="mt-2">
+                    <img src="{{ Storage::url($this->user->signature_path) }}" alt="{{ __('Signature') }}" class="object-contain" style="max-width: 250px; max-height: 150px;">
+                </div>
+            @endif
+        </div>
+
+        @if (Auth::user()->role === \App\Enums\UserRole::Admin)
+            <!-- Role -->
+            <div class="col-span-6 sm:col-span-4">
+                <x-label for="role" value="{{ __('Role') }}" />
+                <select id="role" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm mt-1 block w-full" wire:model="state.role">
+                    @foreach (\App\Enums\UserRole::cases() as $role)
+                        <option value="{{ $role->value }}">{{ ucfirst($role->value) }}</option>
+                    @endforeach
+                </select>
+                <x-input-error for="role" class="mt-2" />
+            </div>
+        @endif
     </x-slot>
 
     <x-slot name="actions">
