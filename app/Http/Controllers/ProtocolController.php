@@ -476,39 +476,51 @@ class ProtocolController extends Controller
      */
     public function step3(Protocol $protocol)
     {
+        // Pobranie uwag z ostatniego protokołu (do opcjonalnego użycia w widoku)
+        $lastProtocolNotes = null;
+        $lastProtocol = Protocol::where('client_object_id', $protocol->clientObject->id)
+            ->where('system_id', $protocol->system->id)
+            ->where('id', '<', $protocol->id)
+            ->orderBy('date', 'desc')
+            ->first();
+
+        if ($lastProtocol && isset($lastProtocol->data['final_notes'])) {
+            $lastProtocolNotes = $lastProtocol->data['final_notes'];
+        }
+
         if ($protocol->system->slug === 'gasnice') {
             $protocolExtinguishers = $protocol->fireExtinguishers()->orderBy('id')->get();
-            return view('protocols.step3', compact('protocol', 'protocolExtinguishers'));
+            return view('protocols.step3', compact('protocol', 'protocolExtinguishers', 'lastProtocolNotes'));
         }
 
         if ($protocol->system->slug === 'drzwi-przeciwpozarowe') {
             $protocolDoors = $protocol->doors()->orderBy('id')->get();
-            return view('protocols.step3', compact('protocol', 'protocolDoors'));
+            return view('protocols.step3', compact('protocol', 'protocolDoors', 'lastProtocolNotes'));
         }
 
         if ($protocol->system->slug === 'klapy-pozarowe') {
             $protocolDampers = $protocol->fireDampers()->orderBy('id')->get();
-            return view('protocols.step3', compact('protocol', 'protocolDampers'));
+            return view('protocols.step3', compact('protocol', 'protocolDampers', 'lastProtocolNotes'));
         }
 
         if ($protocol->system->slug === 'system-oddymiania') {
             $protocolSmokeSystems = $protocol->smokeExtractionSystems()->orderBy('id')->get();
-            return view('protocols.step3', compact('protocol', 'protocolSmokeSystems'));
+            return view('protocols.step3', compact('protocol', 'protocolSmokeSystems', 'lastProtocolNotes'));
         }
 
         if ($protocol->system->slug === 'oswietlenie-awaryjne-i-ewakuacyjne') {
             $protocolLighting = $protocol->emergencyLightingDevices()->orderBy('id')->get();
-            return view('protocols.step3', compact('protocol', 'protocolLighting'));
+            return view('protocols.step3', compact('protocol', 'protocolLighting', 'lastProtocolNotes'));
         }
 
         if ($protocol->system->slug === 'przeciwpozarowy-wylacznik-pradu') {
             $protocolPwpDevices = $protocol->pwpDevices()->orderBy('system_number')->orderBy('id')->get();
-            return view('protocols.step3', compact('protocol', 'protocolPwpDevices'));
+            return view('protocols.step3', compact('protocol', 'protocolPwpDevices', 'lastProtocolNotes'));
         }
 
         if ($protocol->system->slug === 'bramy-i-grodzie-przeciwpozarowe') {
             $protocolFireGateDevices = $protocol->fireGateDevices()->orderBy('system_number')->orderBy('id')->get();
-            return view('protocols.step3', compact('protocol', 'protocolFireGateDevices'));
+            return view('protocols.step3', compact('protocol', 'protocolFireGateDevices', 'lastProtocolNotes'));
         }
 
         // Dla innych systemów (placeholder)

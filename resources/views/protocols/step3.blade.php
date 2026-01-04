@@ -46,7 +46,22 @@
                         @endif
 
                         <div class="mt-8 border-t pt-6">
-                            <label for="final_notes" class="block text-sm font-medium text-gray-700 mb-2">{{ __('Uwagi ogólne do protokołu') }}</label>
+                            <div class="flex justify-between items-center mb-2">
+                                <label for="final_notes" class="block text-sm font-medium text-gray-700">{{ __('Uwagi ogólne do protokołu') }}</label>
+                                @if(!empty($lastProtocolNotes))
+                                    <button type="button" onclick="copyLastNotes()" class="text-xs text-indigo-600 hover:text-indigo-900 focus:outline-none underline">
+                                        {{ __('Kopiuj uwagi z poprzedniego protokołu') }}
+                                    </button>
+                                    <script>
+                                        function copyLastNotes() {
+                                            const notes = {!! json_encode($lastProtocolNotes) !!};
+                                            if (tinymce.get('final_notes')) {
+                                                tinymce.get('final_notes').setContent(notes);
+                                            }
+                                        }
+                                    </script>
+                                @endif
+                            </div>
                             <div class="mt-1">
                                 <textarea id="final_notes" name="final_notes" rows="3" class="shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md">{{ $protocol->data['final_notes'] ?? '' }}</textarea>
                             </div>
@@ -68,7 +83,7 @@
     </div>
 
     <!-- TinyMCE -->
-    <script src="https://cdn.tiny.cloud/1/no-api-key/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="https://cdn.tiny.cloud/1/5g65y1brfdq1cc4nfo3umh4kqplpln2fa7kozrqnmaczzbq8/tinymce/6/tinymce.min.js" referrerpolicy="origin"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             tinymce.init({
