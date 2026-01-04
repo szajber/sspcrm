@@ -260,9 +260,6 @@
                             </div>
                         @endif
 
-                            </div>
-                        @endif
-
                         <!-- Sekcja Oświetlenia (jeśli system to oświetlenie) -->
                         @if($protocol->system->slug === 'oswietlenie-awaryjne-i-ewakuacyjne')
                             <div class="mt-8">

@@ -99,7 +99,7 @@
                         <option value="">{{ __('Wybierz...') }}</option>
                         <option value="Awaryjna">{{ __('Awaryjna') }}</option>
                         <option value="Ewakuacyjna">{{ __('Ewakuacyjna') }}</option>
-                        <option value="Wejście do budynku">{{ __('Wejście do budynku') }}</option>
+                        <option value="Awaryjna zewnętrzna">{{ __('Awaryjna zewnętrzna') }}</option>
                     </select>
                     <x-input-error for="type" class="mt-2" />
                 </div>

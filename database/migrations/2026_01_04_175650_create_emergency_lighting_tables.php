@@ -15,7 +15,7 @@ return new class extends Migration
         Schema::create('emergency_lighting_devices', function (Blueprint $table) {
             $table->id();
             $table->foreignId('client_object_id')->constrained('client_objects')->onDelete('cascade');
-            $table->string('type'); // Awaryjna, Ewakuacyjna, Wejście do budynku
+            $table->string('type'); // Awaryjna, Ewakuacyjna, Awaryjna zewnętrzna
             $table->string('location')->nullable();
 
             $table->integer('sort_order')->default(0);
