@@ -64,6 +64,10 @@ Route::middleware([
         ->names('settings.fire-damper-types')
         ->parameters(['fire-damper-types' => 'fireDamperType']);
 
+    Route::resource('settings/smoke-extraction-central-types', \App\Http\Controllers\SmokeExtractionCentralTypeController::class)
+        ->names('settings.smoke-extraction-central-types')
+        ->parameters(['smoke-extraction-central-types' => 'smokeExtractionCentralType']);
+
     Route::get('/settings/company', [CompanySettingController::class, 'edit'])->name('company.edit');
     Route::put('/settings/company', [CompanySettingController::class, 'update'])->name('company.update');
 

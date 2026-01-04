@@ -118,6 +118,10 @@
                                 {{ __('Typy klap') }}
                             </x-dropdown-link>
 
+                            <x-dropdown-link href="{{ route('settings.smoke-extraction-central-types.index') }}">
+                                {{ __('Typy central oddymiania') }}
+                            </x-dropdown-link>
+
                             <div class="border-t border-gray-200"></div>
 
                             <!-- Authentication -->

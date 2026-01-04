@@ -58,4 +58,9 @@ class Protocol extends Model
     {
         return $this->hasMany(ProtocolFireDamper::class);
     }
+
+    public function smokeExtractionSystems()
+    {
+        return $this->hasMany(ProtocolSmokeExtractionSystem::class);
+    }
 }

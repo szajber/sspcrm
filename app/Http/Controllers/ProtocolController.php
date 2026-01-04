@@ -13,6 +13,8 @@ use App\Models\Door;
 use App\Models\ProtocolDoor;
 use App\Models\FireDamper;
 use App\Models\ProtocolFireDamper;
+use App\Models\SmokeExtractionSystem;
+use App\Models\ProtocolSmokeExtractionSystem;
 use Illuminate\Support\Str;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -237,6 +239,60 @@ class ProtocolController extends Controller
             return view('protocols.step2', compact('protocol', 'protocolDampers'));
         }
 
+        if ($protocol->system->slug === 'oddymianie') {
+            $protocolSmokeSystems = $protocol->smokeExtractionSystems()->orderBy('id')->get();
+
+            if ($protocolSmokeSystems->isEmpty()) {
+                $lastProtocol = Protocol::where('client_object_id', $protocol->clientObject->id)
+                    ->where('system_id', $protocol->system->id)
+                    ->where('id', '<', $protocol->id)
+                    ->orderBy('date', 'desc')
+                    ->first();
+
+                if ($lastProtocol && $lastProtocol->smokeExtractionSystems()->exists()) {
+                    foreach ($lastProtocol->smokeExtractionSystems as $prevSystem) {
+                        $inventoryItem = SmokeExtractionSystem::find($prevSystem->smoke_extraction_system_id);
+                        if ($inventoryItem && $inventoryItem->is_active) {
+                            $protocol->smokeExtractionSystems()->create([
+                                'smoke_extraction_system_id' => $prevSystem->smoke_extraction_system_id,
+                                'central_type_name' => $prevSystem->central_type_name,
+                                'location' => $prevSystem->location,
+                                'detectors_count' => $prevSystem->detectors_count,
+                                'buttons_count' => $prevSystem->buttons_count,
+                                'vent_buttons_count' => $prevSystem->vent_buttons_count,
+                                'air_inlet_count' => $prevSystem->air_inlet_count,
+                                'smoke_exhaust_count' => $prevSystem->smoke_exhaust_count,
+                                'result' => $prevSystem->result,
+                                'notes' => $prevSystem->notes,
+                            ]);
+                        }
+                    }
+                } else {
+                    $inventory = SmokeExtractionSystem::where('client_object_id', $protocol->clientObject->id)
+                        ->where('is_active', true)
+                        ->orderBy('sort_order')
+                        ->get();
+
+                    foreach ($inventory as $item) {
+                        $protocol->smokeExtractionSystems()->create([
+                            'smoke_extraction_system_id' => $item->id,
+                            'central_type_name' => $item->central_type_name,
+                            'location' => $item->location,
+                            'detectors_count' => $item->detectors_count,
+                            'buttons_count' => $item->buttons_count,
+                            'vent_buttons_count' => $item->vent_buttons_count,
+                            'air_inlet_count' => $item->air_inlet_count,
+                            'smoke_exhaust_count' => $item->smoke_exhaust_count,
+                            'result' => 'positive',
+                        ]);
+                    }
+                }
+                $protocolSmokeSystems = $protocol->smokeExtractionSystems()->orderBy('id')->get();
+            }
+
+            return view('protocols.step2', compact('protocol', 'protocolSmokeSystems'));
+        }
+
         return view('protocols.step2', compact('protocol'));
     }
 
@@ -269,6 +325,11 @@ class ProtocolController extends Controller
         if ($protocol->system->slug === 'klapy-pozarowe') {
             $protocolDampers = $protocol->fireDampers()->orderBy('id')->get();
             return view('protocols.step3', compact('protocol', 'protocolDampers'));
+        }
+
+        if ($protocol->system->slug === 'oddymianie') {
+            $protocolSmokeSystems = $protocol->smokeExtractionSystems()->orderBy('id')->get();
+            return view('protocols.step3', compact('protocol', 'protocolSmokeSystems'));
         }
 
         // Dla innych systemów (placeholder)
@@ -354,6 +415,30 @@ class ProtocolController extends Controller
                         'check_drive' => $data['check_drive'] ?? false,
                         'check_mechanical' => $data['check_mechanical'] ?? false,
                         'check_alarm' => $data['check_alarm'] ?? false,
+                        'result' => $data['result'],
+                        'notes' => $data['notes'],
+                    ]);
+                }
+            }
+        }
+
+        if ($protocol->system->slug === 'oddymianie') {
+            $validated = $request->validate([
+                'systems' => 'array',
+                'systems.*.id' => 'required|exists:protocol_smoke_extraction_systems,id',
+                'systems.*.battery_date' => 'nullable|string',
+                'systems.*.result' => 'required|in:positive,negative',
+                'systems.*.notes' => 'nullable|string',
+            ]);
+
+            foreach ($validated['systems'] as $data) {
+                $system = ProtocolSmokeExtractionSystem::where('id', $data['id'])
+                    ->where('protocol_id', $protocol->id)
+                    ->first();
+
+                if ($system) {
+                    $system->update([
+                        'battery_date' => $data['battery_date'],
                         'result' => $data['result'],
                         'notes' => $data['notes'],
                     ]);
@@ -457,6 +542,18 @@ class ProtocolController extends Controller
             ];
 
             $previewData = compact('dampers', 'stats');
+        }
+
+        if ($protocol->system->slug === 'oddymianie') {
+            $smokeSystems = $protocol->smokeExtractionSystems()->orderBy('id')->get();
+
+            $stats = [
+                'total' => $smokeSystems->count(),
+                'positive' => $smokeSystems->where('result', 'positive')->count(),
+                'negative' => $smokeSystems->where('result', 'negative')->count(),
+            ];
+
+            $previewData = compact('smokeSystems', 'stats');
         }
 
         return view('protocols.preview', compact('protocol', 'template') + $previewData);
