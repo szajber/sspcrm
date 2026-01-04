@@ -260,6 +260,85 @@
                             </div>
                         @endif
 
+                            </div>
+                        @endif
+
+                        <!-- Sekcja Oświetlenia (jeśli system to oświetlenie) -->
+                        @if($protocol->system->slug === 'oswietlenie-awaryjne-i-ewakuacyjne')
+                            <div class="mt-8">
+                                <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Raport Szczegółowy') }}</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Lp.</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Typ</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Lokalizacja</th>
+                                                <th class="px-3 py-2 text-center font-medium text-gray-500">Uruch. &lt; 2s</th>
+                                                <th class="px-3 py-2 text-center font-medium text-gray-500">Czas &gt; 1h</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Wynik</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Uwagi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            @foreach($lightingDevices as $index => $item)
+                                                <tr>
+                                                    <td class="px-3 py-2 whitespace-nowrap text-gray-500">{{ $index + 1 }}</td>
+                                                    <td class="px-3 py-2 font-medium text-gray-900">{{ $item->type }}</td>
+                                                    <td class="px-3 py-2 text-gray-500">{{ $item->location }}</td>
+                                                    <td class="px-3 py-2 text-center">
+                                                        {{ $item->check_startup_time ? 'Tak' : 'Nie' }}
+                                                    </td>
+                                                    <td class="px-3 py-2 text-center">
+                                                        {{ $item->check_duration ? 'Tak' : 'Nie' }}
+                                                    </td>
+                                                    <td class="px-3 py-2">
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                                            {{ $item->result === 'positive' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                            {{ $item->result === 'positive' ? 'Pozytywny' : 'Negatywny' }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-3 py-2 text-gray-500 text-xs">{{ $item->notes }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="mt-8 page-break-inside-avoid">
+                                <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Podsumowanie') }}</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-sm border">
+                                        <thead class="bg-gray-100">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-700 border-r">Typ lampy</th>
+                                                <th class="px-3 py-2 text-center font-bold text-gray-900 border-r">Ilość (Suma)</th>
+                                                <th class="px-3 py-2 text-center font-medium text-green-700 border-r">Pozytywne</th>
+                                                <th class="px-3 py-2 text-center font-medium text-red-700 border-r">Negatywne</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            @foreach($stats as $type => $data)
+                                                <tr class="hover:bg-gray-50">
+                                                    <td class="px-3 py-2 font-medium text-gray-900 border-r">{{ $type }}</td>
+                                                    <td class="px-3 py-2 text-center font-bold text-indigo-600 border-r">{{ $data['total'] }}</td>
+                                                    <td class="px-3 py-2 text-center text-green-600 border-r">{{ $data['positive'] }}</td>
+                                                    <td class="px-3 py-2 text-center text-red-600 border-r">{{ $data['negative'] }}</td>
+                                                </tr>
+                                            @endforeach
+                                            <tr class="bg-gray-50 font-bold border-t-2 border-gray-300">
+                                                <td class="px-3 py-2 text-gray-900 border-r">SUMA</td>
+                                                <td class="px-3 py-2 text-center text-indigo-800 border-r">{{ $totals['total'] }}</td>
+                                                <td class="px-3 py-2 text-center text-green-800 border-r">{{ $totals['positive'] }}</td>
+                                                <td class="px-3 py-2 text-center text-red-800 border-r">{{ $totals['negative'] }}</td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        @endif
+
                         <!-- Sekcja Gaśnic (jeśli system to gaśnice) -->
                         @if($protocol->system->slug === 'gasnice')
                             <div class="mt-8">

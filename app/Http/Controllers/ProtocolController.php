@@ -15,6 +15,8 @@ use App\Models\FireDamper;
 use App\Models\ProtocolFireDamper;
 use App\Models\SmokeExtractionSystem;
 use App\Models\ProtocolSmokeExtractionSystem;
+use App\Models\EmergencyLightingDevice;
+use App\Models\ProtocolEmergencyLightingDevice;
 use Illuminate\Support\Str;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -293,6 +295,51 @@ class ProtocolController extends Controller
             return view('protocols.step2', compact('protocol', 'protocolSmokeSystems'));
         }
 
+        if ($protocol->system->slug === 'oswietlenie-awaryjne-i-ewakuacyjne') {
+            $protocolLighting = $protocol->emergencyLightingDevices()->orderBy('id')->get();
+
+            if ($protocolLighting->isEmpty()) {
+                $lastProtocol = Protocol::where('client_object_id', $protocol->clientObject->id)
+                    ->where('system_id', $protocol->system->id)
+                    ->where('id', '<', $protocol->id)
+                    ->orderBy('date', 'desc')
+                    ->first();
+
+                if ($lastProtocol && $lastProtocol->emergencyLightingDevices()->exists()) {
+                    foreach ($lastProtocol->emergencyLightingDevices as $prevItem) {
+                        $inventoryItem = EmergencyLightingDevice::find($prevItem->emergency_lighting_device_id);
+                        if ($inventoryItem) {
+                            $protocol->emergencyLightingDevices()->create([
+                                'emergency_lighting_device_id' => $prevItem->emergency_lighting_device_id,
+                                'type' => $prevItem->type,
+                                'location' => $prevItem->location,
+                                'check_startup_time' => $prevItem->check_startup_time,
+                                'check_duration' => $prevItem->check_duration,
+                                'result' => $prevItem->result,
+                                'notes' => $prevItem->notes,
+                            ]);
+                        }
+                    }
+                } else {
+                    $inventory = EmergencyLightingDevice::where('client_object_id', $protocol->clientObject->id)
+                        ->orderBy('sort_order')
+                        ->get();
+
+                    foreach ($inventory as $item) {
+                        $protocol->emergencyLightingDevices()->create([
+                            'emergency_lighting_device_id' => $item->id,
+                            'type' => $item->type,
+                            'location' => $item->location,
+                            'result' => 'positive',
+                        ]);
+                    }
+                }
+                $protocolLighting = $protocol->emergencyLightingDevices()->orderBy('id')->get();
+            }
+
+            return view('protocols.step2', compact('protocol', 'protocolLighting'));
+        }
+
         return view('protocols.step2', compact('protocol'));
     }
 
@@ -330,6 +377,11 @@ class ProtocolController extends Controller
         if ($protocol->system->slug === 'system-oddymiania') {
             $protocolSmokeSystems = $protocol->smokeExtractionSystems()->orderBy('id')->get();
             return view('protocols.step3', compact('protocol', 'protocolSmokeSystems'));
+        }
+
+        if ($protocol->system->slug === 'oswietlenie-awaryjne-i-ewakuacyjne') {
+            $protocolLighting = $protocol->emergencyLightingDevices()->orderBy('id')->get();
+            return view('protocols.step3', compact('protocol', 'protocolLighting'));
         }
 
         // Dla innych systemów (placeholder)
@@ -446,6 +498,32 @@ class ProtocolController extends Controller
             }
         }
 
+        if ($protocol->system->slug === 'oswietlenie-awaryjne-i-ewakuacyjne') {
+            $validated = $request->validate([
+                'items' => 'array',
+                'items.*.id' => 'required|exists:protocol_emergency_lighting_devices,id',
+                'items.*.check_startup_time' => 'nullable',
+                'items.*.check_duration' => 'nullable',
+                'items.*.result' => 'required|in:positive,negative',
+                'items.*.notes' => 'nullable|string',
+            ]);
+
+            foreach ($validated['items'] as $data) {
+                $item = ProtocolEmergencyLightingDevice::where('id', $data['id'])
+                    ->where('protocol_id', $protocol->id)
+                    ->first();
+
+                if ($item) {
+                    $item->update([
+                        'check_startup_time' => isset($data['check_startup_time']),
+                        'check_duration' => isset($data['check_duration']),
+                        'result' => $data['result'],
+                        'notes' => $data['notes'],
+                    ]);
+                }
+            }
+        }
+
         return redirect()->route('protocols.preview', $protocol);
     }
 
@@ -554,6 +632,34 @@ class ProtocolController extends Controller
             ];
 
             $previewData = compact('smokeSystems', 'stats');
+        }
+
+        if ($protocol->system->slug === 'oswietlenie-awaryjne-i-ewakuacyjne') {
+            $lightingDevices = $protocol->emergencyLightingDevices()->orderBy('id')->get();
+
+            $stats = [];
+            $totals = ['total' => 0, 'positive' => 0, 'negative' => 0];
+
+            // Grupuj według typu
+            $grouped = $lightingDevices->groupBy('type');
+
+            foreach ($grouped as $type => $items) {
+                $count = $items->count();
+                $positive = $items->where('result', 'positive')->count();
+                $negative = $items->where('result', 'negative')->count();
+
+                $stats[$type] = [
+                    'total' => $count,
+                    'positive' => $positive,
+                    'negative' => $negative,
+                ];
+
+                $totals['total'] += $count;
+                $totals['positive'] += $positive;
+                $totals['negative'] += $negative;
+            }
+
+            $previewData = compact('lightingDevices', 'stats', 'totals');
         }
 
         return view('protocols.preview', compact('protocol', 'template') + $previewData);
