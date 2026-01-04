@@ -784,6 +784,126 @@
                 </div>
             </div>
 
+        @elseif($protocol->system->slug === 'wentylacja')
+            @php
+                $distributors = $protocol->ventilationDistributors()->orderBy('id')->get();
+                $fans = $protocol->ventilationFans()->orderBy('id')->get();
+                $stats = [
+                    'fans_total' => $fans->count(),
+                    'fans_positive' => $fans->where('result', 'positive')->count(),
+                    'fans_negative' => $fans->where('result', 'negative')->count(),
+                ];
+                $statusMap = [
+                    'positive' => 'Pozytywny',
+                    'negative' => 'Negatywny',
+                    'not_applicable' => 'Nie dotyczy',
+                ];
+                $checks = [
+                    'check_visual' => 'Ocena wizualna',
+                    'check_cables' => 'Przewody i zaciski',
+                    'check_devices' => 'Urządzenia wewn.',
+                    'check_internal_cables' => 'Przewody wewn.',
+                    'check_main_switch' => 'Wyłącznik główny',
+                    'check_manual_controls' => 'Wysterowania ręczne',
+                    'check_optical' => 'Sygnalizacja optyczna',
+                    'check_input_signals' => 'Sygnały wejściowe',
+                ];
+            @endphp
+
+            <div class="label">Rozdzielnice Wentylacji</div>
+            @foreach($distributors as $distributor)
+                <div style="margin-bottom: 20px; border: 1px solid #ddd; padding: 10px; page-break-inside: avoid;">
+                    <div style="font-weight: bold; font-size: 11px; margin-bottom: 5px; border-bottom: 1px solid #eee; padding-bottom: 2px;">
+                        {{ $distributor->name }} ({{ $distributor->location }})
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 10px;">
+                        @foreach($checks as $key => $label)
+                            <tr>
+                                <td style="width: 40%; padding: 2px; border-bottom: 1px solid #f0f0f0;">{{ $label }}</td>
+                                <td style="width: 20%; padding: 2px; border-bottom: 1px solid #f0f0f0;">
+                                    {{ $statusMap[$distributor->{$key.'_status'}] }}
+                                </td>
+                                <td style="width: 40%; padding: 2px; border-bottom: 1px solid #f0f0f0; font-style: italic; color: #666;">
+                                    {{ $distributor->{$key.'_notes'} }}
+                                </td>
+                            </tr>
+                        @endforeach
+                        <tr>
+                            <td style="width: 40%; padding: 2px; border-bottom: 1px solid #f0f0f0;">Dokumentacja</td>
+                            <td style="width: 20%; padding: 2px; border-bottom: 1px solid #f0f0f0;">
+                                {{ $distributor->check_documentation_status ? 'Jest' : 'Brak' }}
+                            </td>
+                            <td style="width: 40%; padding: 2px; border-bottom: 1px solid #f0f0f0; font-style: italic; color: #666;">
+                                {{ $distributor->check_documentation_notes }}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            @endforeach
+
+            <div class="page-break"></div>
+
+            <div class="label">Wentylatory</div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 9px;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="border: 1px solid #ddd; padding: 5px;">Lp.</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Urządzenie</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Alarm II</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Stan Tech.</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Przewody</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Prąd I</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Prąd II</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Wynik</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Uwagi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($fans as $index => $fan)
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $index + 1 }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">
+                                <b>{{ $fan->name }}</b><br>{{ $fan->location }}
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $fan->check_alarm_level_2 ? 'Tak' : 'Nie' }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $fan->check_technical_condition === 'good' ? 'Poprawny' : 'Uszkodzony' }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $fan->check_cables_condition === 'good' ? 'Poprawny' : 'Uszkodzony' }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $fan->current_1 }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $fan->current_2 }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">
+                                {{ $fan->result === 'positive' ? 'Sprawne' : 'Niesprawne' }}
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">{{ $fan->notes }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            <div class="label">Podsumowanie Wentylatorów</div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="border: 1px solid #ddd; padding: 5px;">Liczba wentylatorów</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Sprawne</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Niesprawne</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $stats['fans_total'] }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center; color: green;">{{ $stats['fans_positive'] }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center; color: red;">{{ $stats['fans_negative'] }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="content-section">
+                <div class="label">Uwagi Końcowe</div>
+                <div style="border: 1px solid #ddd; padding: 10px; min-height: 50px;">
+                    {!! $protocol->data['final_notes'] ?? 'Brak uwag.' !!}
+                </div>
+            </div>
+
         @else
             <p>Szczegółowe wyniki przeglądu systemu {{ $protocol->system->name }}...</p>
         @endif

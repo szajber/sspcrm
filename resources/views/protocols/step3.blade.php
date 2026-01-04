@@ -39,6 +39,8 @@
                             @include('protocols.systems.pwp', ['protocolPwpDevices' => $protocolPwpDevices])
                         @elseif($protocol->system->slug === 'bramy-i-grodzie-przeciwpozarowe')
                             @include('protocols.systems.fire-gates', ['protocolFireGateDevices' => $protocolFireGateDevices])
+                        @elseif($protocol->system->slug === 'wentylacja')
+                            @include('protocols.systems.ventilation', ['protocolDistributors' => $protocolDistributors, 'protocolFans' => $protocolFans])
                         @else
                             <div class="text-center py-10">
                                 <p class="text-gray-500">{{ __('Brak dedykowanego formularza dla tego systemu.') }}</p>

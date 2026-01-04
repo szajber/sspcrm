@@ -78,4 +78,14 @@ class Protocol extends Model
     {
         return $this->hasMany(ProtocolFireGateDevice::class);
     }
+
+    public function ventilationDistributors()
+    {
+        return $this->hasMany(ProtocolVentilationDistributor::class);
+    }
+
+    public function ventilationFans()
+    {
+        return $this->hasMany(ProtocolVentilationFan::class);
+    }
 }

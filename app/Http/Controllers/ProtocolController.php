@@ -21,6 +21,10 @@ use App\Models\PwpDevice;
 use App\Models\ProtocolPwpDevice;
 use App\Models\FireGateDevice;
 use App\Models\ProtocolFireGateDevice;
+use App\Models\VentilationDistributor;
+use App\Models\ProtocolVentilationDistributor;
+use App\Models\VentilationFan;
+use App\Models\ProtocolVentilationFan;
 use Illuminate\Support\Str;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -462,6 +466,76 @@ class ProtocolController extends Controller
             return view('protocols.step2', compact('protocol', 'protocolFireGateDevices'));
         }
 
+        if ($protocol->system->slug === 'wentylacja') {
+            $protocolDistributors = $protocol->ventilationDistributors()->orderBy('id')->get();
+            $protocolFans = $protocol->ventilationFans()->orderBy('id')->get();
+
+            if ($protocolDistributors->isEmpty() && $protocolFans->isEmpty()) {
+                $lastProtocol = Protocol::where('client_object_id', $protocol->clientObject->id)
+                    ->where('system_id', $protocol->system->id)
+                    ->where('id', '<', $protocol->id)
+                    ->orderBy('date', 'desc')
+                    ->first();
+
+                // 1. Rozdzielnice
+                if ($lastProtocol && $lastProtocol->ventilationDistributors()->exists()) {
+                    foreach ($lastProtocol->ventilationDistributors as $prevItem) {
+                        $inventoryItem = VentilationDistributor::find($prevItem->ventilation_distributor_id);
+                        if ($inventoryItem && $inventoryItem->is_active) {
+                            $protocol->ventilationDistributors()->create([
+                                'ventilation_distributor_id' => $prevItem->ventilation_distributor_id,
+                                'name' => $prevItem->name,
+                                'location' => $prevItem->location,
+                            ]);
+                        }
+                    }
+                } else {
+                    $inventory = VentilationDistributor::where('client_object_id', $protocol->clientObject->id)
+                        ->where('is_active', true)
+                        ->orderBy('sort_order')
+                        ->get();
+                    foreach ($inventory as $item) {
+                        $protocol->ventilationDistributors()->create([
+                            'ventilation_distributor_id' => $item->id,
+                            'name' => $item->name,
+                            'location' => $item->location,
+                        ]);
+                    }
+                }
+
+                // 2. Wentylatory
+                if ($lastProtocol && $lastProtocol->ventilationFans()->exists()) {
+                    foreach ($lastProtocol->ventilationFans as $prevItem) {
+                        $inventoryItem = VentilationFan::find($prevItem->ventilation_fan_id);
+                        if ($inventoryItem && $inventoryItem->is_active) {
+                            $protocol->ventilationFans()->create([
+                                'ventilation_fan_id' => $prevItem->ventilation_fan_id,
+                                'name' => $prevItem->name,
+                                'location' => $prevItem->location,
+                            ]);
+                        }
+                    }
+                } else {
+                    $inventory = VentilationFan::where('client_object_id', $protocol->clientObject->id)
+                        ->where('is_active', true)
+                        ->orderBy('sort_order')
+                        ->get();
+                    foreach ($inventory as $item) {
+                        $protocol->ventilationFans()->create([
+                            'ventilation_fan_id' => $item->id,
+                            'name' => $item->name,
+                            'location' => $item->location,
+                        ]);
+                    }
+                }
+
+                $protocolDistributors = $protocol->ventilationDistributors()->orderBy('id')->get();
+                $protocolFans = $protocol->ventilationFans()->orderBy('id')->get();
+            }
+
+            return view('protocols.step2', compact('protocol', 'protocolDistributors', 'protocolFans'));
+        }
+
         return view('protocols.step2', compact('protocol'));
     }
 
@@ -529,6 +603,12 @@ class ProtocolController extends Controller
         if ($protocol->system->slug === 'bramy-i-grodzie-przeciwpozarowe') {
             $protocolFireGateDevices = $protocol->fireGateDevices()->orderBy('system_number')->orderBy('id')->get();
             return view('protocols.step3', compact('protocol', 'protocolFireGateDevices'));
+        }
+
+        if ($protocol->system->slug === 'wentylacja') {
+            $protocolDistributors = $protocol->ventilationDistributors()->orderBy('id')->get();
+            $protocolFans = $protocol->ventilationFans()->orderBy('id')->get();
+            return view('protocols.step3', compact('protocol', 'protocolDistributors', 'protocolFans'));
         }
 
         // Dla innych systemów (placeholder)
@@ -741,6 +821,90 @@ class ProtocolController extends Controller
             }
         }
 
+        if ($protocol->system->slug === 'wentylacja') {
+            $validated = $request->validate([
+                'distributors' => 'array',
+                'distributors.*.id' => 'required|exists:protocol_ventilation_distributors,id',
+                'distributors.*.check_visual_status' => 'required|in:positive,negative,not_applicable',
+                'distributors.*.check_visual_notes' => 'nullable|string',
+                'distributors.*.check_cables_status' => 'required|in:positive,negative,not_applicable',
+                'distributors.*.check_cables_notes' => 'nullable|string',
+                'distributors.*.check_devices_status' => 'required|in:positive,negative,not_applicable',
+                'distributors.*.check_devices_notes' => 'nullable|string',
+                'distributors.*.check_internal_cables_status' => 'required|in:positive,negative,not_applicable',
+                'distributors.*.check_internal_cables_notes' => 'nullable|string',
+                'distributors.*.check_main_switch_status' => 'required|in:positive,negative,not_applicable',
+                'distributors.*.check_main_switch_notes' => 'nullable|string',
+                'distributors.*.check_documentation_status' => 'required|in:1,0', // boolean as int from select/radio
+                'distributors.*.check_documentation_notes' => 'nullable|string',
+                'distributors.*.check_manual_controls_status' => 'required|in:positive,negative,not_applicable',
+                'distributors.*.check_manual_controls_notes' => 'nullable|string',
+                'distributors.*.check_optical_status' => 'required|in:positive,negative,not_applicable',
+                'distributors.*.check_optical_notes' => 'nullable|string',
+                'distributors.*.check_input_signals_status' => 'required|in:positive,negative,not_applicable',
+                'distributors.*.check_input_signals_notes' => 'nullable|string',
+
+                'fans' => 'array',
+                'fans.*.id' => 'required|exists:protocol_ventilation_fans,id',
+                'fans.*.check_alarm_level_2' => 'nullable',
+                'fans.*.check_technical_condition' => 'required|in:good,bad',
+                'fans.*.check_cables_condition' => 'required|in:good,bad',
+                'fans.*.current_1' => 'nullable|string',
+                'fans.*.current_2' => 'nullable|string',
+                'fans.*.result' => 'required|in:positive,negative',
+                'fans.*.notes' => 'nullable|string',
+            ]);
+
+            if (isset($validated['distributors'])) {
+                foreach ($validated['distributors'] as $data) {
+                    $item = ProtocolVentilationDistributor::where('id', $data['id'])
+                        ->where('protocol_id', $protocol->id)
+                        ->first();
+                    if ($item) {
+                        $item->update([
+                            'check_visual_status' => $data['check_visual_status'],
+                            'check_visual_notes' => $data['check_visual_notes'],
+                            'check_cables_status' => $data['check_cables_status'],
+                            'check_cables_notes' => $data['check_cables_notes'],
+                            'check_devices_status' => $data['check_devices_status'],
+                            'check_devices_notes' => $data['check_devices_notes'],
+                            'check_internal_cables_status' => $data['check_internal_cables_status'],
+                            'check_internal_cables_notes' => $data['check_internal_cables_notes'],
+                            'check_main_switch_status' => $data['check_main_switch_status'],
+                            'check_main_switch_notes' => $data['check_main_switch_notes'],
+                            'check_documentation_status' => (bool)$data['check_documentation_status'],
+                            'check_documentation_notes' => $data['check_documentation_notes'],
+                            'check_manual_controls_status' => $data['check_manual_controls_status'],
+                            'check_manual_controls_notes' => $data['check_manual_controls_notes'],
+                            'check_optical_status' => $data['check_optical_status'],
+                            'check_optical_notes' => $data['check_optical_notes'],
+                            'check_input_signals_status' => $data['check_input_signals_status'],
+                            'check_input_signals_notes' => $data['check_input_signals_notes'],
+                        ]);
+                    }
+                }
+            }
+
+            if (isset($validated['fans'])) {
+                foreach ($validated['fans'] as $data) {
+                    $item = ProtocolVentilationFan::where('id', $data['id'])
+                        ->where('protocol_id', $protocol->id)
+                        ->first();
+                    if ($item) {
+                        $item->update([
+                            'check_alarm_level_2' => isset($data['check_alarm_level_2']),
+                            'check_technical_condition' => $data['check_technical_condition'],
+                            'check_cables_condition' => $data['check_cables_condition'],
+                            'current_1' => $data['current_1'],
+                            'current_2' => $data['current_2'],
+                            'result' => $data['result'],
+                            'notes' => $data['notes'],
+                        ]);
+                    }
+                }
+            }
+        }
+
         // Zapisz uwagi ogólne (wspólne dla wszystkich systemów)
         if ($request->has('final_notes')) {
             $data = $protocol->data ?? [];
@@ -933,6 +1097,20 @@ class ProtocolController extends Controller
             }
 
             $previewData = compact('fireGateDevices', 'totals');
+        }
+
+        if ($protocol->system->slug === 'wentylacja') {
+            $distributors = $protocol->ventilationDistributors()->orderBy('id')->get();
+            $fans = $protocol->ventilationFans()->orderBy('id')->get();
+
+            $stats = [
+                'fans_total' => $fans->count(),
+                'fans_positive' => $fans->where('result', 'positive')->count(),
+                'fans_negative' => $fans->where('result', 'negative')->count(),
+                'distributors_count' => $distributors->count(),
+            ];
+
+            $previewData = compact('distributors', 'fans', 'stats');
         }
 
         return view('protocols.preview', compact('protocol', 'template') + $previewData);

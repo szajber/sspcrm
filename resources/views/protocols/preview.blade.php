@@ -583,6 +583,106 @@
                                 </div>
                             </div>
                         @endif
+
+                        @if($protocol->system->slug === 'wentylacja')
+                            <div class="mt-8">
+                                <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Rozdzielnice Wentylacji') }}</h3>
+                                @php
+                                    $statusMap = [
+                                        'positive' => 'Pozytywny',
+                                        'negative' => 'Negatywny',
+                                        'not_applicable' => 'Nie dotyczy',
+                                    ];
+                                    $checks = [
+                                        'check_visual' => 'Ocena wizualna',
+                                        'check_cables' => 'Przewody i zaciski',
+                                        'check_devices' => 'Urządzenia wewn.',
+                                        'check_internal_cables' => 'Przewody wewn.',
+                                        'check_main_switch' => 'Wyłącznik główny',
+                                        'check_manual_controls' => 'Wysterowania ręczne',
+                                        'check_optical' => 'Sygnalizacja optyczna',
+                                        'check_input_signals' => 'Sygnały wejściowe',
+                                    ];
+                                @endphp
+
+                                @foreach($distributors as $distributor)
+                                    <div class="mb-6 border rounded-lg p-4 bg-gray-50">
+                                        <div class="font-bold text-lg mb-2">{{ $distributor->name }} <span class="text-sm font-normal text-gray-500">({{ $distributor->location }})</span></div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                            @foreach($checks as $key => $label)
+                                                <div class="text-sm border-b border-gray-200 pb-1">
+                                                    <span class="font-semibold">{{ $label }}:</span>
+                                                    <span class="{{ $distributor->{$key.'_status'} === 'negative' ? 'text-red-600 font-bold' : '' }}">
+                                                        {{ $statusMap[$distributor->{$key.'_status'}] }}
+                                                    </span>
+                                                    @if($distributor->{$key.'_notes'})
+                                                        <div class="text-xs text-gray-500 mt-1 italic">Uwagi: {{ $distributor->{$key.'_notes'} }}</div>
+                                                    @endif
+                                                </div>
+                                            @endforeach
+                                            <div class="text-sm border-b border-gray-200 pb-1">
+                                                <span class="font-semibold">Dokumentacja:</span>
+                                                <span>{{ $distributor->check_documentation_status ? 'Jest' : 'Brak' }}</span>
+                                                @if($distributor->check_documentation_notes)
+                                                    <div class="text-xs text-gray-500 mt-1 italic">Uwagi: {{ $distributor->check_documentation_notes }}</div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+
+                            <div class="mt-8">
+                                <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Wentylatory') }}</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                        <thead class="bg-gray-100">
+                                            <tr>
+                                                <th class="px-2 py-2 text-left">Lp.</th>
+                                                <th class="px-2 py-2 text-left">Urządzenie</th>
+                                                <th class="px-2 py-2 text-center">Alarm II</th>
+                                                <th class="px-2 py-2 text-center">Stan Tech.</th>
+                                                <th class="px-2 py-2 text-center">Przewody</th>
+                                                <th class="px-2 py-2 text-center">Prąd I</th>
+                                                <th class="px-2 py-2 text-center">Prąd II</th>
+                                                <th class="px-2 py-2 text-center">Wynik</th>
+                                                <th class="px-2 py-2 text-left">Uwagi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="divide-y divide-gray-200 bg-white">
+                                            @foreach($fans as $index => $fan)
+                                                <tr>
+                                                    <td class="px-2 py-2">{{ $index + 1 }}</td>
+                                                    <td class="px-2 py-2">
+                                                        <div class="font-bold">{{ $fan->name }}</div>
+                                                        <div class="text-xs text-gray-500">{{ $fan->location }}</div>
+                                                    </td>
+                                                    <td class="px-2 py-2 text-center">{{ $fan->check_alarm_level_2 ? 'Tak' : 'Nie' }}</td>
+                                                    <td class="px-2 py-2 text-center">{{ $fan->check_technical_condition === 'good' ? 'Poprawny' : 'Uszkodzony' }}</td>
+                                                    <td class="px-2 py-2 text-center">{{ $fan->check_cables_condition === 'good' ? 'Poprawny' : 'Uszkodzony' }}</td>
+                                                    <td class="px-2 py-2 text-center">{{ $fan->current_1 }}</td>
+                                                    <td class="px-2 py-2 text-center">{{ $fan->current_2 }}</td>
+                                                    <td class="px-2 py-2 text-center font-bold {{ $fan->result === 'positive' ? 'text-green-600' : 'text-red-600' }}">
+                                                        {{ $fan->result === 'positive' ? 'Sprawne' : 'Niesprawne' }}
+                                                    </td>
+                                                    <td class="px-2 py-2">{{ $fan->notes }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="mt-8 p-4 bg-gray-100 rounded page-break-inside-avoid">
+                                <h4 class="font-bold mb-2">Podsumowanie Wentylatorów</h4>
+                                <div class="grid grid-cols-3 gap-4 text-center">
+                                    <div>Liczba wentylatorów: <strong>{{ $stats['fans_total'] }}</strong></div>
+                                    <div class="text-green-600">Sprawne: <strong>{{ $stats['fans_positive'] }}</strong></div>
+                                    <div class="text-red-600">Niesprawne: <strong>{{ $stats['fans_negative'] }}</strong></div>
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="flex items-center justify-end mt-6 space-x-4">
