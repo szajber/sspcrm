@@ -53,4 +53,9 @@ class Protocol extends Model
     {
         return $this->hasMany(ProtocolDoor::class);
     }
+
+    public function fireDampers()
+    {
+        return $this->hasMany(ProtocolFireDamper::class);
+    }
 }
