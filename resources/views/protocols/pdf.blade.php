@@ -272,6 +272,76 @@
                 </div>
             </div>
 
+        @elseif($protocol->system->slug === 'klapy-poz')
+            @php
+                $dampers = $protocol->fireDampers()->orderBy('id')->get();
+                $stats = [
+                    'total' => $dampers->count(),
+                    'positive' => $dampers->where('result', 'positive')->count(),
+                    'negative' => $dampers->where('result', 'negative')->count(),
+                ];
+            @endphp
+
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="border: 1px solid #ddd; padding: 5px;">Lp.</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Typ</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Lokalizacja</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Opt.</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Napęd</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Mech.</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Alarm</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Wynik</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Uwagi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($dampers as $index => $item)
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $index + 1 }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->type_name }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->location }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $item->check_optical ? 'Tak' : 'Nie' }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $item->check_drive ? 'Tak' : 'Nie' }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $item->check_mechanical ? 'Tak' : 'Nie' }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $item->check_alarm ? 'Tak' : 'Nie' }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">
+                                {{ $item->result === 'positive' ? 'Pozytywny' : 'Negatywny' }}
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->notes }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            <div class="page-break"></div>
+
+            <div class="label">Podsumowanie</div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="border: 1px solid #ddd; padding: 5px;">Liczba klap</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Wynik Pozytywny</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Wynik Negatywny</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center; font-weight: bold;">{{ $stats['total'] }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center; color: green; font-weight: bold;">{{ $stats['positive'] }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center; color: red; font-weight: bold;">{{ $stats['negative'] }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="content-section">
+                <div class="label">Uwagi Końcowe</div>
+                <div style="border: 1px solid #ddd; padding: 10px; min-height: 50px;">
+                    {{ $protocol->data['final_notes'] ?? 'Brak uwag.' }}
+                </div>
+            </div>
+
         @elseif($protocol->system->slug === 'gasnice')
             @php
                 $extinguishers = $protocol->fireExtinguishers()->orderBy('id')->get();

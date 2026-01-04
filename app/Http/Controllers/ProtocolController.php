@@ -9,9 +9,11 @@ use App\Models\ProtocolTemplate;
 use App\Models\System;
 use App\Models\FireExtinguisher;
 use App\Models\ProtocolFireExtinguisher;
-    use App\Models\Door;
-    use App\Models\ProtocolDoor;
-    use Illuminate\Support\Str;
+use App\Models\Door;
+use App\Models\ProtocolDoor;
+use App\Models\FireDamper;
+use App\Models\ProtocolFireDamper;
+use Illuminate\Support\Str;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
@@ -189,6 +191,52 @@ class ProtocolController extends Controller
             return view('protocols.step2', compact('protocol', 'protocolDoors'));
         }
 
+        if ($protocol->system->slug === 'klapy-poz') {
+            $protocolDampers = $protocol->fireDampers()->orderBy('id')->get();
+
+            if ($protocolDampers->isEmpty()) {
+                $lastProtocol = Protocol::where('client_object_id', $protocol->clientObject->id)
+                    ->where('system_id', $protocol->system->id)
+                    ->where('id', '<', $protocol->id)
+                    ->orderBy('date', 'desc')
+                    ->first();
+
+                if ($lastProtocol && $lastProtocol->fireDampers()->exists()) {
+                    foreach ($lastProtocol->fireDampers as $prevDamper) {
+                        $inventoryItem = FireDamper::find($prevDamper->fire_damper_id);
+                        if ($inventoryItem && $inventoryItem->is_active) {
+                            $protocol->fireDampers()->create([
+                                'fire_damper_id' => $prevDamper->fire_damper_id,
+                                'type_name' => $prevDamper->type_name,
+                                'location' => $prevDamper->location,
+                                'manufacturer' => $prevDamper->manufacturer,
+                                'result' => $prevDamper->result,
+                                'notes' => $prevDamper->notes,
+                            ]);
+                        }
+                    }
+                } else {
+                    $inventory = FireDamper::where('client_object_id', $protocol->clientObject->id)
+                        ->where('is_active', true)
+                        ->orderBy('sort_order')
+                        ->get();
+
+                    foreach ($inventory as $item) {
+                        $protocol->fireDampers()->create([
+                            'fire_damper_id' => $item->id,
+                            'type_name' => $item->type_name,
+                            'location' => $item->location,
+                            'manufacturer' => $item->manufacturer,
+                            'result' => 'positive',
+                        ]);
+                    }
+                }
+                $protocolDampers = $protocol->fireDampers()->orderBy('id')->get();
+            }
+
+            return view('protocols.step2', compact('protocol', 'protocolDampers'));
+        }
+
         return view('protocols.step2', compact('protocol'));
     }
 
@@ -216,6 +264,11 @@ class ProtocolController extends Controller
         if ($protocol->system->slug === 'drzwi-przeciwpozarowe') {
             $protocolDoors = $protocol->doors()->orderBy('id')->get();
             return view('protocols.step3', compact('protocol', 'protocolDoors'));
+        }
+
+        if ($protocol->system->slug === 'klapy-poz') {
+            $protocolDampers = $protocol->fireDampers()->orderBy('id')->get();
+            return view('protocols.step3', compact('protocol', 'protocolDampers'));
         }
 
         // Dla innych systemów (placeholder)
@@ -272,6 +325,36 @@ class ProtocolController extends Controller
                 if ($door) {
                     $door->update([
                         'status' => $data['status'],
+                        'notes' => $data['notes'],
+                    ]);
+                }
+            }
+        }
+
+        if ($protocol->system->slug === 'klapy-poz') {
+            $validated = $request->validate([
+                'dampers' => 'array',
+                'dampers.*.id' => 'required|exists:protocol_fire_dampers,id',
+                'dampers.*.check_optical' => 'nullable|boolean',
+                'dampers.*.check_drive' => 'nullable|boolean',
+                'dampers.*.check_mechanical' => 'nullable|boolean',
+                'dampers.*.check_alarm' => 'nullable|boolean',
+                'dampers.*.result' => 'required|in:positive,negative',
+                'dampers.*.notes' => 'nullable|string',
+            ]);
+
+            foreach ($validated['dampers'] as $data) {
+                $damper = ProtocolFireDamper::where('id', $data['id'])
+                    ->where('protocol_id', $protocol->id)
+                    ->first();
+
+                if ($damper) {
+                    $damper->update([
+                        'check_optical' => $data['check_optical'] ?? false,
+                        'check_drive' => $data['check_drive'] ?? false,
+                        'check_mechanical' => $data['check_mechanical'] ?? false,
+                        'check_alarm' => $data['check_alarm'] ?? false,
+                        'result' => $data['result'],
                         'notes' => $data['notes'],
                     ]);
                 }
@@ -362,6 +445,18 @@ class ProtocolController extends Controller
             }
 
             $previewData = compact('doors', 'stats', 'statuses', 'totals');
+        }
+
+        if ($protocol->system->slug === 'klapy-poz') {
+            $dampers = $protocol->fireDampers()->orderBy('id')->get();
+
+            $stats = [
+                'total' => $dampers->count(),
+                'positive' => $dampers->where('result', 'positive')->count(),
+                'negative' => $dampers->where('result', 'negative')->count(),
+            ];
+
+            $previewData = compact('dampers', 'stats');
         }
 
         return view('protocols.preview', compact('protocol', 'template') + $previewData);

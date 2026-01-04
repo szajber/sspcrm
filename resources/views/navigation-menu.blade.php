@@ -114,6 +114,10 @@
                                 {{ __('Klasy odporności drzwi') }}
                             </x-dropdown-link>
 
+                            <x-dropdown-link href="{{ route('settings.fire-damper-types.index') }}">
+                                {{ __('Typy klap') }}
+                            </x-dropdown-link>
+
                             <div class="border-t border-gray-200"></div>
 
                             <!-- Authentication -->

@@ -143,6 +143,71 @@
                             </div>
                         @endif
 
+                            </div>
+                        @endif
+
+                        <!-- Sekcja Klap (jeśli system to klapy) -->
+                        @if($protocol->system->slug === 'klapy-poz')
+                            <div class="mt-8">
+                                <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Raport Szczegółowy') }}</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Lp.</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Typ</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Lokalizacja</th>
+                                                <th class="px-3 py-2 text-center font-medium text-gray-500" title="Optyczna kontrola">Opt.</th>
+                                                <th class="px-3 py-2 text-center font-medium text-gray-500" title="Napęd mechaniczny">Napęd</th>
+                                                <th class="px-3 py-2 text-center font-medium text-gray-500" title="Części mechaniczne">Mech.</th>
+                                                <th class="px-3 py-2 text-center font-medium text-gray-500" title="Tryb alarmowy">Alarm</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Wynik</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Uwagi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            @foreach($dampers as $index => $item)
+                                                <tr>
+                                                    <td class="px-3 py-2 whitespace-nowrap text-gray-500">{{ $index + 1 }}</td>
+                                                    <td class="px-3 py-2 font-medium text-gray-900">{{ $item->type_name }}</td>
+                                                    <td class="px-3 py-2 text-gray-500">{{ $item->location }}</td>
+                                                    <td class="px-3 py-2 text-center">{{ $item->check_optical ? 'Tak' : 'Nie' }}</td>
+                                                    <td class="px-3 py-2 text-center">{{ $item->check_drive ? 'Tak' : 'Nie' }}</td>
+                                                    <td class="px-3 py-2 text-center">{{ $item->check_mechanical ? 'Tak' : 'Nie' }}</td>
+                                                    <td class="px-3 py-2 text-center">{{ $item->check_alarm ? 'Tak' : 'Nie' }}</td>
+                                                    <td class="px-3 py-2">
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                                            {{ $item->result === 'positive' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                            {{ $item->result === 'positive' ? 'Pozytywny' : 'Negatywny' }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-3 py-2 text-gray-500 text-xs">{{ $item->notes }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="mt-8 page-break-inside-avoid">
+                                <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Podsumowanie') }}</h3>
+                                <div class="bg-white rounded shadow p-4 grid grid-cols-3 gap-4 text-center">
+                                    <div class="p-4 bg-gray-50 rounded">
+                                        <div class="text-sm text-gray-500">{{ __('Liczba klap') }}</div>
+                                        <div class="text-2xl font-bold text-gray-900">{{ $stats['total'] }}</div>
+                                    </div>
+                                    <div class="p-4 bg-green-50 rounded">
+                                        <div class="text-sm text-green-600">{{ __('Wynik Pozytywny') }}</div>
+                                        <div class="text-2xl font-bold text-green-700">{{ $stats['positive'] }}</div>
+                                    </div>
+                                    <div class="p-4 bg-red-50 rounded">
+                                        <div class="text-sm text-red-600">{{ __('Wynik Negatywny') }}</div>
+                                        <div class="text-2xl font-bold text-red-700">{{ $stats['negative'] }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         <!-- Sekcja Gaśnic (jeśli system to gaśnice) -->
                         @if($protocol->system->slug === 'gasnice')
                             <div class="mt-8">

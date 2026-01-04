@@ -60,6 +60,10 @@ Route::middleware([
         ->names('settings.door-resistance-classes')
         ->parameters(['door-resistance-classes' => 'doorResistanceClass']);
 
+    Route::resource('settings/fire-damper-types', \App\Http\Controllers\FireDamperTypeController::class)
+        ->names('settings.fire-damper-types')
+        ->parameters(['fire-damper-types' => 'fireDamperType']);
+
     Route::get('/settings/company', [CompanySettingController::class, 'edit'])->name('company.edit');
     Route::put('/settings/company', [CompanySettingController::class, 'update'])->name('company.update');
 
