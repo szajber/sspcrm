@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Protocol;
 use App\Models\ProtocolDoor;
 use App\Models\Door;
+use App\Models\DoorResistanceClass;
 use Livewire\Component;
 
 class ProtocolDoorsManager extends Component
@@ -14,8 +15,11 @@ class ProtocolDoorsManager extends Component
     // Form properties
     public $editingId = null;
     public $showModal = false;
-    public $resistance_class;
+    public $resistance_class_id;
+    public $custom_resistance_class;
     public $location;
+
+    public $availableClasses = [];
 
     public function mount(Protocol $protocol)
     {
@@ -24,6 +28,9 @@ class ProtocolDoorsManager extends Component
 
     public function render()
     {
+        // Pobieramy dostępne klasy
+        $this->availableClasses = DoorResistanceClass::orderBy('name')->get();
+
         // Pobieramy drzwi posortowane według kolejności z inwentarza
         $doors = ProtocolDoor::where('protocol_id', $this->protocol->id)
             ->leftJoin('doors', 'protocol_doors.door_id', '=', 'doors.id')
@@ -162,7 +169,8 @@ class ProtocolDoorsManager extends Component
     public function resetForm()
     {
         $this->editingId = null;
-        $this->resistance_class = '';
+        $this->resistance_class_id = null;
+        $this->custom_resistance_class = '';
         $this->location = '';
     }
 
@@ -171,8 +179,30 @@ class ProtocolDoorsManager extends Component
         $door = ProtocolDoor::find($id);
         if ($door) {
             $this->editingId = $id;
-            $this->resistance_class = $door->resistance_class;
             $this->location = $door->location;
+
+            // Próba ustalenia ID klasy
+            $this->resistance_class_id = null;
+            $this->custom_resistance_class = '';
+
+            // 1. Sprawdź w powiązanym inwentarzu
+            if ($door->door_id) {
+                $inventory = Door::find($door->door_id);
+                if ($inventory && $inventory->resistance_class_id) {
+                    $this->resistance_class_id = $inventory->resistance_class_id;
+                }
+            }
+
+            // 2. Jeśli nie znaleziono ID, spróbuj znaleźć po nazwie w słowniku
+            if (!$this->resistance_class_id && $door->resistance_class) {
+                $existingClass = DoorResistanceClass::where('name', $door->resistance_class)->first();
+                if ($existingClass) {
+                    $this->resistance_class_id = $existingClass->id;
+                } else {
+                    $this->custom_resistance_class = $door->resistance_class;
+                }
+            }
+
             $this->showModal = true;
         }
     }
@@ -180,15 +210,48 @@ class ProtocolDoorsManager extends Component
     public function save()
     {
         $this->validate([
-            'resistance_class' => 'nullable|string|max:255',
+            'resistance_class_id' => 'nullable|exists:door_resistance_classes,id',
+            'custom_resistance_class' => 'nullable|string|max:255',
             'location' => 'nullable|string|max:255',
         ]);
+
+        // Automatyczne dodawanie nowego typu do słownika
+        if (empty($this->resistance_class_id) && !empty($this->custom_resistance_class)) {
+            // Sprawdź czy taki typ już istnieje (case-insensitive)
+            $existingClass = DoorResistanceClass::where('name', $this->custom_resistance_class)->first();
+
+            if ($existingClass) {
+                $this->resistance_class_id = $existingClass->id;
+            } else {
+                // Utwórz nowy typ
+                $newClass = DoorResistanceClass::create([
+                    'name' => $this->custom_resistance_class,
+                    'description' => 'Dodano automatycznie podczas tworzenia protokołu.'
+                ]);
+                $this->resistance_class_id = $newClass->id;
+
+                // Odśwież listę
+                $this->availableClasses = DoorResistanceClass::orderBy('name')->get();
+            }
+        }
+
+        $className = '';
+        if ($this->resistance_class_id) {
+            $classObj = DoorResistanceClass::find($this->resistance_class_id);
+            $className = $classObj ? $classObj->name : $this->custom_resistance_class;
+        } else {
+            $className = $this->custom_resistance_class;
+        }
+
+        // Preferujemy ID w inwentarzu
+        $inventoryCustomClass = $this->resistance_class_id ? null : $this->custom_resistance_class;
+        $inventoryClassId = $this->resistance_class_id ?: null;
 
         if ($this->editingId) {
             // Edycja
             $door = ProtocolDoor::find($this->editingId);
             $door->update([
-                'resistance_class' => $this->resistance_class,
+                'resistance_class' => $className,
                 'location' => $this->location,
             ]);
 
@@ -196,7 +259,8 @@ class ProtocolDoorsManager extends Component
                 $inventory = Door::find($door->door_id);
                 if ($inventory) {
                     $inventory->update([
-                        'resistance_class' => $this->resistance_class,
+                        'resistance_class_id' => $inventoryClassId,
+                        'custom_resistance_class' => $inventoryCustomClass,
                         'location' => $this->location,
                     ]);
                 }
@@ -208,14 +272,15 @@ class ProtocolDoorsManager extends Component
 
             $inventory = Door::create([
                 'client_object_id' => $this->protocol->clientObject->id,
-                'resistance_class' => $this->resistance_class,
+                'resistance_class_id' => $inventoryClassId,
+                'custom_resistance_class' => $inventoryCustomClass,
                 'location' => $this->location,
                 'sort_order' => $maxOrder + 1,
             ]);
 
             $this->protocol->doors()->create([
                 'door_id' => $inventory->id,
-                'resistance_class' => $this->resistance_class,
+                'resistance_class' => $className,
                 'location' => $this->location,
                 'status' => 'sprawne',
             ]);

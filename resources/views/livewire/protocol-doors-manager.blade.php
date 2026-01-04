@@ -94,10 +94,24 @@
             <div class="grid grid-cols-1 gap-6">
                 <!-- Klasa odporności -->
                 <div>
-                    <x-label for="resistance_class" value="{{ __('Klasa odporności') }}" />
-                    <x-input wire:model="resistance_class" id="resistance_class" type="text" class="block mt-1 w-full" placeholder="np. EI30" />
-                    <x-input-error for="resistance_class" class="mt-2" />
+                    <x-label for="resistance_class_id" value="{{ __('Klasa odporności') }}" />
+                    <select wire:model.live="resistance_class_id" id="resistance_class_id" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full">
+                        <option value="">{{ __('Wybierz klasę...') }}</option>
+                        @foreach($availableClasses as $class)
+                            <option value="{{ $class->id }}">{{ $class->name }}</option>
+                        @endforeach
+                    </select>
+                    <x-input-error for="resistance_class_id" class="mt-2" />
                 </div>
+
+                <!-- Inna klasa (jeśli nie ma na liście) -->
+                @if(empty($resistance_class_id))
+                    <div>
+                        <x-label for="custom_resistance_class" value="{{ __('Inna klasa (wpisz ręcznie)') }}" />
+                        <x-input wire:model="custom_resistance_class" id="custom_resistance_class" type="text" class="block mt-1 w-full" placeholder="np. EI30 (zostanie dodana do listy)" />
+                        <x-input-error for="custom_resistance_class" class="mt-2" />
+                    </div>
+                @endif
 
                 <!-- Lokalizacja -->
                 <div>

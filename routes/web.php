@@ -56,6 +56,10 @@ Route::middleware([
         ->names('settings.fire-extinguisher-types')
         ->parameters(['fire-extinguisher-types' => 'fireExtinguisherType']);
 
+    Route::resource('settings/door-resistance-classes', \App\Http\Controllers\DoorResistanceClassController::class)
+        ->names('settings.door-resistance-classes')
+        ->parameters(['door-resistance-classes' => 'doorResistanceClass']);
+
     Route::get('/settings/company', [CompanySettingController::class, 'edit'])->name('company.edit');
     Route::put('/settings/company', [CompanySettingController::class, 'update'])->name('company.update');
 

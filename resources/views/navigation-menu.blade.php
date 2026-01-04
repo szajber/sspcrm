@@ -110,6 +110,10 @@
                                 {{ __('Typy gaśnic') }}
                             </x-dropdown-link>
 
+                            <x-dropdown-link href="{{ route('settings.door-resistance-classes.index') }}">
+                                {{ __('Klasy odporności drzwi') }}
+                            </x-dropdown-link>
+
                             <div class="border-t border-gray-200"></div>
 
                             <!-- Authentication -->
