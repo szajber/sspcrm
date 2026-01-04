@@ -46,6 +46,10 @@
                         <div class="mb-6">
                             @livewire('protocol-pwp-manager', ['protocol' => $protocol])
                         </div>
+                    @elseif($protocol->system->slug === 'bramy-i-grodzie-przeciwpozarowe')
+                        <div class="mb-6">
+                            @livewire('protocol-fire-gates-manager', ['protocol' => $protocol])
+                        </div>
                     @else
                         <div class="text-center py-10">
                                 <h3 class="text-lg font-medium text-gray-900">{{ __('Dane szczegółowe systemu') }}</h3>

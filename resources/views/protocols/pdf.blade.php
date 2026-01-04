@@ -575,6 +575,105 @@
                 </div>
             </div>
 
+        @elseif($protocol->system->slug === 'bramy-i-grodzie-przeciwpozarowe')
+            @php
+                $fireGateDevices = $protocol->fireGateDevices()->orderBy('system_number')->orderBy('id')->get();
+                $totals = ['gates' => 0, 'gates_positive' => 0, 'gates_negative' => 0, 'centrals' => 0, 'centrals_positive' => 0, 'centrals_negative' => 0];
+                foreach ($fireGateDevices as $device) {
+                    if ($device->type === 'gate') {
+                        $totals['gates']++;
+                        if ($device->result === 'positive') $totals['gates_positive']++; else $totals['gates_negative']++;
+                    } elseif ($device->type === 'central') {
+                        $totals['centrals']++;
+                        if ($device->result === 'positive') $totals['centrals_positive']++; else $totals['centrals_negative']++;
+                    }
+                }
+            @endphp
+
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="border: 1px solid #ddd; padding: 5px;">Lp.</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">System</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Urządzenie</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Lokalizacja</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Sprawdzenia</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Wynik</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Uwagi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($fireGateDevices as $index => $item)
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $index + 1 }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">Sys {{ $item->system_number }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">
+                                @if($item->type === 'gate')
+                                    <b>Brama</b><br>
+                                    {{ $item->gate_type === 'electric' ? 'Elektryczna' : 'Grawitacyjna' }}<br>
+                                    @if($item->fire_resistance_class) EI: {{ $item->fire_resistance_class }} @endif
+                                @else
+                                    <b>Centrala</b><br>
+                                    {{ $item->manufacturer }} {{ $item->model }}
+                                @endif
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->location }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px; font-size: 9px;">
+                                @if($item->type === 'gate')
+                                    Zadziałanie: {{ $item->result === 'positive' ? 'Tak' : 'Nie' }}
+                                @else
+                                    Czujki: {{ $item->check_detectors ? 'Tak' : 'Nie' }}<br>
+                                    Przyciski: {{ $item->check_buttons ? 'Tak' : 'Nie' }}<br>
+                                    Sygnalizatory: {{ $item->check_signalers ? 'Tak' : 'Nie' }}<br>
+                                    Trzymacz: {{ $item->check_holding_mechanism ? 'Tak' : 'Nie' }}<br>
+                                    @if($item->check_drive)Silnik: Tak<br>@endif
+                                    @if($item->battery_date)Akumulatory: {{ $item->battery_date }}@endif
+                                @endif
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">
+                                {{ $item->result === 'positive' ? 'Sprawny' : 'Niesprawny' }}
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->notes }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            <div class="page-break"></div>
+
+            <div class="label">Podsumowanie</div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="border: 1px solid #ddd; padding: 5px;">Urządzenie</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Ilość</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Sprawne</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Niesprawne</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 5px;">Bramy</td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $totals['gates'] }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center; color: green;">{{ $totals['gates_positive'] }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center; color: red;">{{ $totals['gates_negative'] }}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 5px;">Centrale</td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $totals['centrals'] }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center; color: green;">{{ $totals['centrals_positive'] }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center; color: red;">{{ $totals['centrals_negative'] }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="content-section">
+                <div class="label">Uwagi Końcowe</div>
+                <div style="border: 1px solid #ddd; padding: 10px; min-height: 50px;">
+                    {{ $protocol->data['final_notes'] ?? 'Brak uwag.' }}
+                </div>
+            </div>
+
         @elseif($protocol->system->slug === 'gasnice')
             @php
                 $extinguishers = $protocol->fireExtinguishers()->orderBy('id')->get();

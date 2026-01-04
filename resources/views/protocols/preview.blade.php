@@ -336,9 +336,6 @@
                             </div>
                         @endif
 
-                            </div>
-                        @endif
-
                         <!-- Sekcja PWP (jeśli system to PWP) -->
                         @if($protocol->system->slug === 'przeciwpozarowy-wylacznik-pradu')
                             <div class="mt-8">
@@ -401,6 +398,104 @@
                                     <div class="p-4 bg-red-50 rounded">
                                         <div class="text-sm text-red-600">{{ __('Systemy niesprawne') }}</div>
                                         <div class="text-2xl font-bold text-red-700">{{ $totals['negative'] }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
+                            </div>
+                        @endif
+
+                        <!-- Sekcja Bram (jeśli system to Bramy) -->
+                        @if($protocol->system->slug === 'bramy-i-grodzie-przeciwpozarowe')
+                            <div class="mt-8">
+                                <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Raport Szczegółowy') }}</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Lp.</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">System</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Urządzenie</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Lokalizacja</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Sprawdzenia</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Wynik</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Uwagi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            @foreach($fireGateDevices as $index => $item)
+                                                <tr>
+                                                    <td class="px-3 py-2 whitespace-nowrap text-gray-500">{{ $index + 1 }}</td>
+                                                    <td class="px-3 py-2 font-medium text-gray-900">Sys {{ $item->system_number }}</td>
+                                                    <td class="px-3 py-2 text-gray-700">
+                                                        @if($item->type === 'gate')
+                                                            <div><strong>Brama</strong></div>
+                                                            <div class="text-xs text-gray-500">{{ $item->gate_type === 'electric' ? 'Elektryczna' : 'Grawitacyjna' }}</div>
+                                                            @if($item->fire_resistance_class)<div class="text-xs text-gray-500">EI: {{ $item->fire_resistance_class }}</div>@endif
+                                                        @else
+                                                            <div><strong>Centrala</strong></div>
+                                                            <div class="text-xs text-gray-500">{{ $item->manufacturer }} {{ $item->model }}</div>
+                                                        @endif
+                                                    </td>
+                                                    <td class="px-3 py-2 text-gray-500">{{ $item->location }}</td>
+                                                    <td class="px-3 py-2 text-xs text-gray-500">
+                                                        @if($item->type === 'gate')
+                                                            <div>Zadziałanie: {{ $item->result === 'positive' ? 'Tak' : 'Nie' }}</div>
+                                                        @else
+                                                            <div>Czujki: {{ $item->check_detectors ? 'Tak' : 'Nie' }}</div>
+                                                            <div>Przyciski: {{ $item->check_buttons ? 'Tak' : 'Nie' }}</div>
+                                                            <div>Sygnalizatory: {{ $item->check_signalers ? 'Tak' : 'Nie' }}</div>
+                                                            <div>Trzymacz: {{ $item->check_holding_mechanism ? 'Tak' : 'Nie' }}</div>
+                                                            @if($item->check_drive)<div>Silnik: Tak</div>@endif
+                                                            @if($item->battery_date)<div>Akumulatory: {{ $item->battery_date }}</div>@endif
+                                                        @endif
+                                                    </td>
+                                                    <td class="px-3 py-2">
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                                            {{ $item->result === 'positive' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                            {{ $item->result === 'positive' ? 'Sprawny' : 'Niesprawny' }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-3 py-2 text-gray-500 text-xs">{{ $item->notes }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="mt-8 page-break-inside-avoid">
+                                <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Podsumowanie') }}</h3>
+                                <div class="bg-white rounded shadow p-4 grid grid-cols-2 gap-8">
+                                    <!-- Podsumowanie Bram -->
+                                    <div>
+                                        <h4 class="font-bold text-gray-700 mb-2 border-b pb-1">Bramy ({{ $totals['gates'] }})</h4>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="p-3 bg-green-50 rounded text-center">
+                                                <div class="text-xs text-green-600">Sprawne</div>
+                                                <div class="text-xl font-bold text-green-700">{{ $totals['gates_positive'] }}</div>
+                                            </div>
+                                            <div class="p-3 bg-red-50 rounded text-center">
+                                                <div class="text-xs text-red-600">Niesprawne</div>
+                                                <div class="text-xl font-bold text-red-700">{{ $totals['gates_negative'] }}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Podsumowanie Central -->
+                                    <div>
+                                        <h4 class="font-bold text-gray-700 mb-2 border-b pb-1">Centrale ({{ $totals['centrals'] }})</h4>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div class="p-3 bg-green-50 rounded text-center">
+                                                <div class="text-xs text-green-600">Sprawne</div>
+                                                <div class="text-xl font-bold text-green-700">{{ $totals['centrals_positive'] }}</div>
+                                            </div>
+                                            <div class="p-3 bg-red-50 rounded text-center">
+                                                <div class="text-xs text-red-600">Niesprawne</div>
+                                                <div class="text-xl font-bold text-red-700">{{ $totals['centrals_negative'] }}</div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

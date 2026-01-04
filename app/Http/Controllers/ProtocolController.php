@@ -19,6 +19,8 @@ use App\Models\EmergencyLightingDevice;
 use App\Models\ProtocolEmergencyLightingDevice;
 use App\Models\PwpDevice;
 use App\Models\ProtocolPwpDevice;
+use App\Models\FireGateDevice;
+use App\Models\ProtocolFireGateDevice;
 use Illuminate\Support\Str;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -392,6 +394,66 @@ class ProtocolController extends Controller
             return view('protocols.step2', compact('protocol', 'protocolPwpDevices'));
         }
 
+        if ($protocol->system->slug === 'bramy-i-grodzie-przeciwpozarowe') {
+            $protocolFireGateDevices = $protocol->fireGateDevices()->orderBy('system_number')->orderBy('id')->get();
+
+            if ($protocolFireGateDevices->isEmpty()) {
+                $lastProtocol = Protocol::where('client_object_id', $protocol->clientObject->id)
+                    ->where('system_id', $protocol->system->id)
+                    ->where('id', '<', $protocol->id)
+                    ->orderBy('date', 'desc')
+                    ->first();
+
+                if ($lastProtocol && $lastProtocol->fireGateDevices()->exists()) {
+                    foreach ($lastProtocol->fireGateDevices as $prevItem) {
+                        $inventoryItem = FireGateDevice::find($prevItem->fire_gate_device_id);
+                        if ($inventoryItem) {
+                            $protocol->fireGateDevices()->create([
+                                'fire_gate_device_id' => $prevItem->fire_gate_device_id,
+                                'type' => $prevItem->type,
+                                'system_number' => $prevItem->system_number,
+                                'location' => $prevItem->location,
+                                'gate_type' => $prevItem->gate_type,
+                                'fire_resistance_class' => $prevItem->fire_resistance_class,
+                                'manufacturer' => $prevItem->manufacturer,
+                                'model' => $prevItem->model,
+                                'check_detectors' => $prevItem->check_detectors,
+                                'check_buttons' => $prevItem->check_buttons,
+                                'check_signalers' => $prevItem->check_signalers,
+                                'check_holding_mechanism' => $prevItem->check_holding_mechanism,
+                                'check_drive' => $prevItem->check_drive,
+                                'battery_date' => $prevItem->battery_date,
+                                'result' => $prevItem->result,
+                                'notes' => $prevItem->notes,
+                            ]);
+                        }
+                    }
+                } else {
+                    $inventory = FireGateDevice::where('client_object_id', $protocol->clientObject->id)
+                        ->orderBy('system_number')
+                        ->orderBy('sort_order')
+                        ->get();
+
+                    foreach ($inventory as $item) {
+                        $protocol->fireGateDevices()->create([
+                            'fire_gate_device_id' => $item->id,
+                            'type' => $item->type,
+                            'system_number' => $item->system_number,
+                            'location' => $item->location,
+                            'gate_type' => $item->gate_type,
+                            'fire_resistance_class' => $item->fire_resistance_class,
+                            'manufacturer' => $item->manufacturer,
+                            'model' => $item->model,
+                            'result' => 'positive',
+                        ]);
+                    }
+                }
+                $protocolFireGateDevices = $protocol->fireGateDevices()->orderBy('system_number')->orderBy('id')->get();
+            }
+
+            return view('protocols.step2', compact('protocol', 'protocolFireGateDevices'));
+        }
+
         return view('protocols.step2', compact('protocol'));
     }
 
@@ -439,6 +501,11 @@ class ProtocolController extends Controller
         if ($protocol->system->slug === 'przeciwpozarowy-wylacznik-pradu') {
             $protocolPwpDevices = $protocol->pwpDevices()->orderBy('system_number')->orderBy('id')->get();
             return view('protocols.step3', compact('protocol', 'protocolPwpDevices'));
+        }
+
+        if ($protocol->system->slug === 'bramy-i-grodzie-przeciwpozarowe') {
+            $protocolFireGateDevices = $protocol->fireGateDevices()->orderBy('system_number')->orderBy('id')->get();
+            return view('protocols.step3', compact('protocol', 'protocolFireGateDevices'));
         }
 
         // Dla innych systemów (placeholder)
@@ -611,6 +678,40 @@ class ProtocolController extends Controller
             }
         }
 
+        if ($protocol->system->slug === 'bramy-i-grodzie-przeciwpozarowe') {
+            $validated = $request->validate([
+                'items' => 'array',
+                'items.*.id' => 'required|exists:protocol_fire_gate_devices,id',
+                'items.*.check_detectors' => 'nullable',
+                'items.*.check_buttons' => 'nullable',
+                'items.*.check_signalers' => 'nullable',
+                'items.*.check_holding_mechanism' => 'nullable',
+                'items.*.check_drive' => 'nullable',
+                'items.*.battery_date' => 'nullable|string',
+                'items.*.result' => 'required|in:positive,negative',
+                'items.*.notes' => 'nullable|string',
+            ]);
+
+            foreach ($validated['items'] as $data) {
+                $item = ProtocolFireGateDevice::where('id', $data['id'])
+                    ->where('protocol_id', $protocol->id)
+                    ->first();
+
+                if ($item) {
+                    $item->update([
+                        'check_detectors' => isset($data['check_detectors']),
+                        'check_buttons' => isset($data['check_buttons']),
+                        'check_signalers' => isset($data['check_signalers']),
+                        'check_holding_mechanism' => isset($data['check_holding_mechanism']),
+                        'check_drive' => isset($data['check_drive']),
+                        'battery_date' => $data['battery_date'] ?? null,
+                        'result' => $data['result'],
+                        'notes' => $data['notes'],
+                    ]);
+                }
+            }
+        }
+
         return redirect()->route('protocols.preview', $protocol);
     }
 
@@ -775,6 +876,27 @@ class ProtocolController extends Controller
             // W widoku użyjemy $totals['total'] jako ilość systemów
 
             $previewData = compact('pwpDevices', 'totals');
+        }
+
+        if ($protocol->system->slug === 'bramy-i-grodzie-przeciwpozarowe') {
+            $fireGateDevices = $protocol->fireGateDevices()->orderBy('system_number')->orderBy('id')->get();
+
+            $stats = [];
+            $totals = ['gates' => 0, 'gates_positive' => 0, 'gates_negative' => 0, 'centrals' => 0, 'centrals_positive' => 0, 'centrals_negative' => 0];
+
+            foreach ($fireGateDevices as $device) {
+                if ($device->type === 'gate') {
+                    $totals['gates']++;
+                    if ($device->result === 'positive') $totals['gates_positive']++;
+                    else $totals['gates_negative']++;
+                } elseif ($device->type === 'central') {
+                    $totals['centrals']++;
+                    if ($device->result === 'positive') $totals['centrals_positive']++;
+                    else $totals['centrals_negative']++;
+                }
+            }
+
+            $previewData = compact('fireGateDevices', 'totals');
         }
 
         return view('protocols.preview', compact('protocol', 'template') + $previewData);

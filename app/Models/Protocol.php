@@ -73,4 +73,9 @@ class Protocol extends Model
     {
         return $this->hasMany(ProtocolPwpDevice::class);
     }
+
+    public function fireGateDevices()
+    {
+        return $this->hasMany(ProtocolFireGateDevice::class);
+    }
 }
