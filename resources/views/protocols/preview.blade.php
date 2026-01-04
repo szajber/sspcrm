@@ -336,6 +336,76 @@
                             </div>
                         @endif
 
+                            </div>
+                        @endif
+
+                        <!-- Sekcja PWP (jeśli system to PWP) -->
+                        @if($protocol->system->slug === 'przeciwpozarowy-wylacznik-pradu')
+                            <div class="mt-8">
+                                <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Raport Szczegółowy') }}</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Lp.</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">System</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Urządzenie</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Lokalizacja</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Sprawdzenia</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Wynik</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Uwagi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            @foreach($pwpDevices as $index => $item)
+                                                <tr>
+                                                    <td class="px-3 py-2 whitespace-nowrap text-gray-500">{{ $index + 1 }}</td>
+                                                    <td class="px-3 py-2 font-medium text-gray-900">PWP {{ $item->system_number }}</td>
+                                                    <td class="px-3 py-2 text-gray-700">{{ $item->type === 'switch' ? 'Wyłącznik' : 'Punkt aktywacji' }}</td>
+                                                    <td class="px-3 py-2 text-gray-500">{{ $item->location }}</td>
+                                                    <td class="px-3 py-2 text-xs text-gray-500">
+                                                        @if($item->type === 'switch')
+                                                            <div>Zadziałanie: {{ $item->check_activation ? 'Tak' : 'Nie' }}</div>
+                                                        @else
+                                                            <div>Dostęp: {{ $item->check_access ? 'Tak' : 'Nie' }}</div>
+                                                            <div>Oznakowanie: {{ $item->check_signage ? 'Tak' : 'Nie' }}</div>
+                                                            <div>Stan tech.: {{ $item->check_condition ? 'Tak' : 'Nie' }}</div>
+                                                            <div>Zadziałanie: {{ $item->check_activation ? 'Tak' : 'Nie' }}</div>
+                                                        @endif
+                                                    </td>
+                                                    <td class="px-3 py-2">
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                                            {{ $item->result === 'positive' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                            {{ $item->result === 'positive' ? 'Pozytywny' : 'Negatywny' }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-3 py-2 text-gray-500 text-xs">{{ $item->notes }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="mt-8 page-break-inside-avoid">
+                                <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Podsumowanie') }}</h3>
+                                <div class="bg-white rounded shadow p-4 grid grid-cols-3 gap-4 text-center">
+                                    <div class="p-4 bg-gray-50 rounded">
+                                        <div class="text-sm text-gray-500">{{ __('Liczba systemów') }}</div>
+                                        <div class="text-2xl font-bold text-gray-900">{{ $totals['total'] }}</div>
+                                    </div>
+                                    <div class="p-4 bg-green-50 rounded">
+                                        <div class="text-sm text-green-600">{{ __('Systemy sprawne') }}</div>
+                                        <div class="text-2xl font-bold text-green-700">{{ $totals['positive'] }}</div>
+                                    </div>
+                                    <div class="p-4 bg-red-50 rounded">
+                                        <div class="text-sm text-red-600">{{ __('Systemy niesprawne') }}</div>
+                                        <div class="text-2xl font-bold text-red-700">{{ $totals['negative'] }}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        @endif
+
                         <!-- Sekcja Gaśnic (jeśli system to gaśnice) -->
                         @if($protocol->system->slug === 'gasnice')
                             <div class="mt-8">

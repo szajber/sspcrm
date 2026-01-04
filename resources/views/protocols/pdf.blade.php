@@ -497,6 +497,84 @@
                 </div>
             </div>
 
+        @elseif($protocol->system->slug === 'przeciwpozarowy-wylacznik-pradu')
+            @php
+                $pwpDevices = $protocol->pwpDevices()->orderBy('system_number')->orderBy('id')->get();
+                $totals = ['total' => 0, 'positive' => 0, 'negative' => 0];
+                $uniqueSystems = $pwpDevices->pluck('system_number')->unique();
+                $totals['total'] = $uniqueSystems->count();
+                foreach ($uniqueSystems as $sysNum) {
+                    $systemItems = $pwpDevices->where('system_number', $sysNum);
+                    $isPositive = $systemItems->every(fn($item) => $item->result === 'positive');
+                    if ($isPositive) $totals['positive']++; else $totals['negative']++;
+                }
+            @endphp
+
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="border: 1px solid #ddd; padding: 5px;">Lp.</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">System</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Urządzenie</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Lokalizacja</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Sprawdzenia</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Wynik</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Uwagi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($pwpDevices as $index => $item)
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $index + 1 }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">PWP {{ $item->system_number }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->type === 'switch' ? 'Wyłącznik' : 'Punkt aktywacji' }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->location }}</td>
+                            <td style="border: 1px solid #ddd; padding: 5px; font-size: 9px;">
+                                @if($item->type === 'switch')
+                                    Zadziałanie: {{ $item->check_activation ? 'Tak' : 'Nie' }}
+                                @else
+                                    Dostęp: {{ $item->check_access ? 'Tak' : 'Nie' }}<br>
+                                    Oznakowanie: {{ $item->check_signage ? 'Tak' : 'Nie' }}<br>
+                                    Stan tech.: {{ $item->check_condition ? 'Tak' : 'Nie' }}<br>
+                                    Zadziałanie: {{ $item->check_activation ? 'Tak' : 'Nie' }}
+                                @endif
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">
+                                {{ $item->result === 'positive' ? 'Pozytywny' : 'Negatywny' }}
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->notes }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            <div class="page-break"></div>
+
+            <div class="label">Podsumowanie</div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="border: 1px solid #ddd; padding: 5px;">Liczba systemów</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Systemy sprawne</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Systemy niesprawne</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $totals['total'] }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center; color: green;">{{ $totals['positive'] }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center; color: red;">{{ $totals['negative'] }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="content-section">
+                <div class="label">Uwagi Końcowe</div>
+                <div style="border: 1px solid #ddd; padding: 10px; min-height: 50px;">
+                    {{ $protocol->data['final_notes'] ?? 'Brak uwag.' }}
+                </div>
+            </div>
+
         @elseif($protocol->system->slug === 'gasnice')
             @php
                 $extinguishers = $protocol->fireExtinguishers()->orderBy('id')->get();

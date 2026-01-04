@@ -17,6 +17,8 @@ use App\Models\SmokeExtractionSystem;
 use App\Models\ProtocolSmokeExtractionSystem;
 use App\Models\EmergencyLightingDevice;
 use App\Models\ProtocolEmergencyLightingDevice;
+use App\Models\PwpDevice;
+use App\Models\ProtocolPwpDevice;
 use Illuminate\Support\Str;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -340,6 +342,56 @@ class ProtocolController extends Controller
             return view('protocols.step2', compact('protocol', 'protocolLighting'));
         }
 
+        if ($protocol->system->slug === 'przeciwpozarowy-wylacznik-pradu') {
+            $protocolPwpDevices = $protocol->pwpDevices()->orderBy('system_number')->orderBy('id')->get();
+
+            if ($protocolPwpDevices->isEmpty()) {
+                $lastProtocol = Protocol::where('client_object_id', $protocol->clientObject->id)
+                    ->where('system_id', $protocol->system->id)
+                    ->where('id', '<', $protocol->id)
+                    ->orderBy('date', 'desc')
+                    ->first();
+
+                if ($lastProtocol && $lastProtocol->pwpDevices()->exists()) {
+                    foreach ($lastProtocol->pwpDevices as $prevItem) {
+                        $inventoryItem = PwpDevice::find($prevItem->pwp_device_id);
+                        if ($inventoryItem) {
+                            $protocol->pwpDevices()->create([
+                                'pwp_device_id' => $prevItem->pwp_device_id,
+                                'type' => $prevItem->type,
+                                'location' => $prevItem->location,
+                                'system_number' => $prevItem->system_number,
+                                'check_access' => $prevItem->check_access,
+                                'check_signage' => $prevItem->check_signage,
+                                'check_condition' => $prevItem->check_condition,
+                                'check_activation' => $prevItem->check_activation,
+                                'result' => $prevItem->result,
+                                'notes' => $prevItem->notes,
+                            ]);
+                        }
+                    }
+                } else {
+                    $inventory = PwpDevice::where('client_object_id', $protocol->clientObject->id)
+                        ->orderBy('system_number')
+                        ->orderBy('sort_order')
+                        ->get();
+
+                    foreach ($inventory as $item) {
+                        $protocol->pwpDevices()->create([
+                            'pwp_device_id' => $item->id,
+                            'type' => $item->type,
+                            'location' => $item->location,
+                            'system_number' => $item->system_number,
+                            'result' => 'positive',
+                        ]);
+                    }
+                }
+                $protocolPwpDevices = $protocol->pwpDevices()->orderBy('system_number')->orderBy('id')->get();
+            }
+
+            return view('protocols.step2', compact('protocol', 'protocolPwpDevices'));
+        }
+
         return view('protocols.step2', compact('protocol'));
     }
 
@@ -382,6 +434,11 @@ class ProtocolController extends Controller
         if ($protocol->system->slug === 'oswietlenie-awaryjne-i-ewakuacyjne') {
             $protocolLighting = $protocol->emergencyLightingDevices()->orderBy('id')->get();
             return view('protocols.step3', compact('protocol', 'protocolLighting'));
+        }
+
+        if ($protocol->system->slug === 'przeciwpozarowy-wylacznik-pradu') {
+            $protocolPwpDevices = $protocol->pwpDevices()->orderBy('system_number')->orderBy('id')->get();
+            return view('protocols.step3', compact('protocol', 'protocolPwpDevices'));
         }
 
         // Dla innych systemów (placeholder)
@@ -517,6 +574,36 @@ class ProtocolController extends Controller
                     $item->update([
                         'check_startup_time' => isset($data['check_startup_time']),
                         'check_duration' => isset($data['check_duration']),
+                        'result' => $data['result'],
+                        'notes' => $data['notes'],
+                    ]);
+                }
+            }
+        }
+
+        if ($protocol->system->slug === 'przeciwpozarowy-wylacznik-pradu') {
+            $validated = $request->validate([
+                'items' => 'array',
+                'items.*.id' => 'required|exists:protocol_pwp_devices,id',
+                'items.*.check_access' => 'nullable',
+                'items.*.check_signage' => 'nullable',
+                'items.*.check_condition' => 'nullable',
+                'items.*.check_activation' => 'nullable',
+                'items.*.result' => 'required|in:positive,negative',
+                'items.*.notes' => 'nullable|string',
+            ]);
+
+            foreach ($validated['items'] as $data) {
+                $item = ProtocolPwpDevice::where('id', $data['id'])
+                    ->where('protocol_id', $protocol->id)
+                    ->first();
+
+                if ($item) {
+                    $item->update([
+                        'check_access' => isset($data['check_access']),
+                        'check_signage' => isset($data['check_signage']),
+                        'check_condition' => isset($data['check_condition']),
+                        'check_activation' => isset($data['check_activation']),
                         'result' => $data['result'],
                         'notes' => $data['notes'],
                     ]);
@@ -660,6 +747,34 @@ class ProtocolController extends Controller
             }
 
             $previewData = compact('lightingDevices', 'stats', 'totals');
+        }
+
+        if ($protocol->system->slug === 'przeciwpozarowy-wylacznik-pradu') {
+            $pwpDevices = $protocol->pwpDevices()->orderBy('system_number')->orderBy('id')->get();
+
+            $stats = [];
+            $totals = ['total' => 0, 'positive' => 0, 'negative' => 0];
+
+            // Liczymy ilość systemów (unikalne system_number)
+            $uniqueSystems = $pwpDevices->pluck('system_number')->unique();
+            $totals['total'] = $uniqueSystems->count();
+
+            // Dla każdego systemu sprawdzamy czy WSZYSTKIE elementy są pozytywne
+            foreach ($uniqueSystems as $sysNum) {
+                $systemItems = $pwpDevices->where('system_number', $sysNum);
+                $isPositive = $systemItems->every(fn($item) => $item->result === 'positive');
+
+                if ($isPositive) {
+                    $totals['positive']++;
+                } else {
+                    $totals['negative']++;
+                }
+            }
+
+            // Dodatkowo statystyki per element (dla ciekawości, ale w podsumowaniu chcemy systemy)
+            // W widoku użyjemy $totals['total'] jako ilość systemów
+
+            $previewData = compact('pwpDevices', 'totals');
         }
 
         return view('protocols.preview', compact('protocol', 'template') + $previewData);

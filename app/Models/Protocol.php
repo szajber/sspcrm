@@ -68,4 +68,9 @@ class Protocol extends Model
     {
         return $this->hasMany(ProtocolEmergencyLightingDevice::class);
     }
+
+    public function pwpDevices()
+    {
+        return $this->hasMany(ProtocolPwpDevice::class);
+    }
 }
