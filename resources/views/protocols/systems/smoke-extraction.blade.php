@@ -5,7 +5,7 @@
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Centrala') }}</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Lokalizacja') }}</th>
-                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Data akumulatorów') }}</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Rok produkcji akumulatorów') }}</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Wynik') }}</th>
                 <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">{{ __('Uwagi') }}</th>
             </tr>
@@ -24,7 +24,7 @@
                         {{ $item->location }}
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
-                        <input type="text" name="systems[{{ $index }}][battery_date]" value="{{ $item->battery_date }}" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block w-full text-sm" placeholder="YYYY-MM-DD">
+                        <input type="text" name="systems[{{ $index }}][battery_date]" value="{{ $item->battery_date }}" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block w-full text-sm" placeholder="RRRR">
                     </td>
                     <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-500">
                         <select name="systems[{{ $index }}][result]" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block w-full text-sm">

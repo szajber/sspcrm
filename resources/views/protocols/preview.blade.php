@@ -204,9 +204,6 @@
                             </div>
                         @endif
 
-                            </div>
-                        @endif
-
                         <!-- Sekcja Oddymiania (jeśli system to oddymianie) -->
                         @if($protocol->system->slug === 'system-oddymiania')
                             <div class="mt-8">
@@ -218,7 +215,7 @@
                                                 <th class="px-3 py-2 text-left font-medium text-gray-500">Lp.</th>
                                                 <th class="px-3 py-2 text-left font-medium text-gray-500">Centrala</th>
                                                 <th class="px-3 py-2 text-left font-medium text-gray-500">Lokalizacja</th>
-                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Data akumulatorów</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Rok prod. akum.</th>
                                                 <th class="px-3 py-2 text-left font-medium text-gray-500">Wynik</th>
                                                 <th class="px-3 py-2 text-left font-medium text-gray-500">Uwagi</th>
                                             </tr>

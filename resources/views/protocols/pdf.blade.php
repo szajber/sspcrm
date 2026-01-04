@@ -355,14 +355,14 @@
             <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px;">
                 <thead>
                     <tr style="background-color: #f0f0f0;">
-                        <th style="border: 1px solid #ddd; padding: 5px;">Lp.</th>
-                        <th style="border: 1px solid #ddd; padding: 5px;">Centrala</th>
-                        <th style="border: 1px solid #ddd; padding: 5px;">Lokalizacja</th>
-                        <th style="border: 1px solid #ddd; padding: 5px;">Elementy systemu</th>
-                        <th style="border: 1px solid #ddd; padding: 5px;">Data akumulatorów</th>
-                        <th style="border: 1px solid #ddd; padding: 5px;">Wynik</th>
-                        <th style="border: 1px solid #ddd; padding: 5px;">Uwagi</th>
-                    </tr>
+                         <th style="border: 1px solid #ddd; padding: 5px;">Lp.</th>
+                         <th style="border: 1px solid #ddd; padding: 5px;">Centrala</th>
+                         <th style="border: 1px solid #ddd; padding: 5px;">Lokalizacja</th>
+                         <th style="border: 1px solid #ddd; padding: 5px;">Elementy systemu</th>
+                         <th style="border: 1px solid #ddd; padding: 5px;">Rok prod. akum.</th>
+                         <th style="border: 1px solid #ddd; padding: 5px;">Wynik</th>
+                         <th style="border: 1px solid #ddd; padding: 5px;">Uwagi</th>
+                     </tr>
                 </thead>
                 <tbody>
                     @foreach($smokeSystems as $index => $item)
