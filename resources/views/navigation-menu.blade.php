@@ -102,6 +102,14 @@
                                 </x-dropdown-link>
                             @endif
 
+                            <x-dropdown-link href="{{ route('settings.protocols.index') }}">
+                                {{ __('Protokoły') }}
+                            </x-dropdown-link>
+
+                            <x-dropdown-link href="{{ route('settings.fire-extinguisher-types.index') }}">
+                                {{ __('Typy gaśnic') }}
+                            </x-dropdown-link>
+
                             <div class="border-t border-gray-200"></div>
 
                             <!-- Authentication -->

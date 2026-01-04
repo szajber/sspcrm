@@ -8,19 +8,19 @@
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                
+
                 <!-- Dane Klienta -->
                 <div class="md:col-span-1">
                     <div class="bg-white overflow-hidden shadow-xl sm:rounded-lg">
                         <div class="p-6">
                             <h3 class="text-lg font-medium text-gray-900 mb-4">{{ __('Dane Klienta') }}</h3>
-                            
+
                             <div class="space-y-4">
                                 <div>
                                     <span class="block text-sm font-medium text-gray-500">{{ __('Nazwa') }}</span>
                                     <span class="block text-gray-900">{{ $client->name }}</span>
                                 </div>
-                                
+
                                 @if($client->nip)
                                 <div>
                                     <span class="block text-sm font-medium text-gray-500">{{ __('NIP') }}</span>
@@ -118,7 +118,11 @@
                                             @foreach ($client->objects as $object)
                                                 <tr>
                                                     <td class="px-6 py-4 whitespace-nowrap">
-                                                        <div class="text-sm font-medium text-gray-900">{{ $object->name }}</div>
+                                                        <div class="text-sm font-medium text-gray-900">
+                                                            <a href="{{ route('objects.show', $object) }}" class="hover:text-indigo-600 hover:underline">
+                                                                {{ $object->name }}
+                                                            </a>
+                                                        </div>
                                                     </td>
                                                     <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                                         {{ $object->address }} <span class="text-gray-400">({{ $object->city }})</span>

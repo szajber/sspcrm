@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Client;
 use App\Models\ClientObject;
+use App\Models\System;
 use Illuminate\Http\Request;
 
 class ClientObjectController extends Controller
@@ -54,10 +55,26 @@ class ClientObjectController extends Controller
         return redirect()->route('objects.index')->with('status', 'Obiekt został dodany.');
     }
 
+    public function show(ClientObject $object)
+    {
+        $object->load(['client', 'systems']);
+        
+        // Pobierz 5 najnowszych protokołów
+        $protocols = \App\Models\Protocol::where('client_object_id', $object->id)
+            ->with(['system', 'performer'])
+            ->orderBy('date', 'desc')
+            ->orderBy('id', 'desc')
+            ->limit(5)
+            ->get();
+            
+        return view('objects.show', compact('object', 'protocols'));
+    }
+
     public function edit(ClientObject $object)
     {
         $clients = Client::orderBy('name')->get();
-        return view('objects.edit', compact('object', 'clients'));
+        $systems = System::orderBy('name')->get();
+        return view('objects.edit', compact('object', 'clients', 'systems'));
     }
 
     public function update(Request $request, ClientObject $object)
@@ -70,6 +87,8 @@ class ClientObjectController extends Controller
             'city' => 'nullable|string|max:255',
             'notes' => 'nullable|string',
             'is_active' => 'boolean',
+            'systems' => 'array',
+            'systems.*' => 'exists:systems,id',
         ]);
 
         if (!isset($validated['is_active'])) {
@@ -77,6 +96,13 @@ class ClientObjectController extends Controller
         }
 
         $object->update($validated);
+
+        // Synchronizacja systemów
+        if (isset($validated['systems'])) {
+            $object->systems()->sync($validated['systems']);
+        } else {
+            $object->systems()->detach();
+        }
 
         return redirect()->route('objects.index')->with('status', 'Dane obiektu zostały zaktualizowane.');
     }

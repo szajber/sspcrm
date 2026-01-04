@@ -31,10 +31,11 @@ class User extends Authenticatable
         'email',
         'password',
         'role',
+        'is_active',
         'job_title',
         'phone',
+        'position', // Alias if needed or used
         'signature_path',
-        'is_active',
     ];
 
     /**

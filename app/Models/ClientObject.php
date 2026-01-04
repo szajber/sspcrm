@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+
 class ClientObject extends Model
 {
     use HasFactory;
@@ -27,5 +29,10 @@ class ClientObject extends Model
     public function client(): BelongsTo
     {
         return $this->belongsTo(Client::class);
+    }
+
+    public function systems(): BelongsToMany
+    {
+        return $this->belongsToMany(System::class, 'client_object_system');
     }
 }

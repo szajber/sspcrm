@@ -22,7 +22,11 @@
         @foreach ($objects as $object)
             <tr>
                 <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="text-sm font-medium text-gray-900">{{ $object->name }}</div>
+                    <div class="text-sm font-medium text-gray-900">
+                        <a href="{{ route('objects.show', $object) }}" class="hover:text-indigo-600 hover:underline">
+                            {{ $object->name }}
+                        </a>
+                    </div>
                 </td>
                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     @if($object->client)

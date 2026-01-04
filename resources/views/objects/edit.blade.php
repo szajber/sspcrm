@@ -78,7 +78,31 @@
                             </div>
                         </div>
 
-                        <div class="flex items-center justify-end px-4 py-3 bg-gray-50 text-end sm:px-6 shadow sm:rounded-bl-md sm:rounded-br-md">
+                        <x-section-border />
+
+                        <div class="mt-10 sm:mt-0">
+                            <div class="md:grid md:grid-cols-3 md:gap-6">
+                                <x-section-title>
+                                    <x-slot name="title">{{ __('Systemy Obiektu') }}</x-slot>
+                                    <x-slot name="description">{{ __('Zaznacz systemy, które są aktywne dla tego obiektu.') }}</x-slot>
+                                </x-section-title>
+
+                                <div class="mt-5 md:mt-0 md:col-span-2">
+                                    <div class="px-4 py-5 bg-white sm:p-6 shadow sm:rounded-md">
+                                        <div class="grid grid-cols-1 gap-4">
+                                            @foreach($systems as $system)
+                                                <label class="flex items-center">
+                                                    <x-checkbox name="systems[]" value="{{ $system->id }}" :checked="$object->systems->contains($system->id)" />
+                                                    <span class="ml-2 text-sm text-gray-600">{{ $system->name }}</span>
+                                                </label>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="flex items-center justify-end px-4 py-3 bg-gray-50 text-end sm:px-6 shadow sm:rounded-bl-md sm:rounded-br-md mt-6">
                             <x-button>
                                 {{ __('Zaktualizuj') }}
                             </x-button>
