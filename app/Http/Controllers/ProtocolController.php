@@ -762,7 +762,7 @@ class ProtocolController extends Controller
                 'detectors' => 'array',
                 'detectors.*.id' => 'required|exists:protocol_gas_detection_detectors,id',
                 'detectors.*.result' => 'required|in:positive,negative,calibration',
-                'detectors.*.next_calibration_date' => 'nullable|date',
+                'detectors.*.next_calibration_date' => 'nullable|date_format:Y-m',
                 'detectors.*.notes' => 'nullable|string',
 
                 'controls' => 'array',
@@ -789,7 +789,7 @@ class ProtocolController extends Controller
                     if ($item && $item->protocol_id === $protocol->id) {
                         $item->update([
                             'result' => $data['result'],
-                            'next_calibration_date' => $data['next_calibration_date'],
+                            'next_calibration_date' => $data['next_calibration_date'] ? $data['next_calibration_date'] . '-01' : null,
                             'notes' => $data['notes'],
                         ]);
                     }

@@ -961,7 +961,7 @@
                                 {{ $item->result === 'positive' ? 'Sprawny' : ($item->result === 'calibration' ? 'Do kalibracji' : 'Niesprawny') }}
                             </td>
                             <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">
-                                {{ $item->next_calibration_date ? $item->next_calibration_date->format('d.m.Y') : '-' }}
+                                {{ $item->next_calibration_date ? $item->next_calibration_date->format('m-Y') : '-' }}
                             </td>
                             <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->notes }}</td>
                         </tr>

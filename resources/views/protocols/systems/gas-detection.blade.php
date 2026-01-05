@@ -64,7 +64,7 @@
                                 </select>
                             </td>
                             <td class="px-3 py-4 text-center">
-                                <input type="date" name="detectors[{{ $index }}][next_calibration_date]" value="{{ $item->next_calibration_date ? $item->next_calibration_date->format('Y-m-d') : '' }}" class="block w-full text-xs border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
+                                <input type="month" name="detectors[{{ $index }}][next_calibration_date]" value="{{ $item->next_calibration_date ? $item->next_calibration_date->format('Y-m') : '' }}" class="block w-full text-xs border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
                             </td>
                             <td class="px-3 py-4">
                                 <input type="text" name="detectors[{{ $index }}][notes]" value="{{ $item->notes }}" class="block w-full text-xs border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500">
