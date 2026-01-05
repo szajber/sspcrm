@@ -1,18 +1,4 @@
 <div>
-    <div wire:ignore>
-        <datalist id="gas_central_types_list">
-            @foreach($centralTypes as $type)
-                <option value="{{ $type->name }}">
-            @endforeach
-        </datalist>
-
-        <datalist id="gas_detector_types_list">
-            @foreach($detectorTypes as $type)
-                <option value="{{ $type->name }}">
-            @endforeach
-        </datalist>
-    </div>
-
     <!-- Centrale -->
     <div class="mb-8">
         <div class="flex justify-between items-center mb-4">
@@ -174,9 +160,18 @@
         <x-slot name="content">
             <div class="grid grid-cols-1 gap-6">
                 <div>
-                    <x-label for="centralName" value="{{ __('Nazwa/Model') }}" />
-                    <x-input wire:model="centralName" id="centralName" type="text" list="gas_central_types_list" autocomplete="off" class="block mt-1 w-full" />
-                    <x-input-error for="centralName" class="mt-2" />
+                    <x-label for="centralTypeId" value="{{ __('Nazwa/Model (z listy)') }}" />
+                    <select wire:model="centralTypeId" id="centralTypeId" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full">
+                        <option value="">{{ __('Wybierz...') }}</option>
+                        @foreach($centralTypes as $type)
+                            <option value="{{ $type->id }}">{{ $type->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <x-label for="centralCustomName" value="{{ __('LUB Nazwa Niestandardowa (jeśli brak na liście)') }}" />
+                    <x-input wire:model="centralCustomName" id="centralCustomName" type="text" class="block mt-1 w-full" placeholder="np. Nowy Model Centrali" />
+                    <x-input-error for="centralCustomName" class="mt-2" />
                 </div>
                 <div>
                     <x-label for="centralLocation" value="{{ __('Lokalizacja') }}" />
@@ -203,9 +198,18 @@
         <x-slot name="content">
             <div class="grid grid-cols-1 gap-6">
                 <div>
-                    <x-label for="detectorName" value="{{ __('Nazwa/Typ') }}" />
-                    <x-input wire:model="detectorName" id="detectorName" type="text" list="gas_detector_types_list" autocomplete="off" class="block mt-1 w-full" />
-                    <x-input-error for="detectorName" class="mt-2" />
+                    <x-label for="detectorTypeId" value="{{ __('Nazwa/Typ (z listy)') }}" />
+                    <select wire:model="detectorTypeId" id="detectorTypeId" class="border-gray-300 focus:border-indigo-500 focus:ring-indigo-500 rounded-md shadow-sm block mt-1 w-full">
+                        <option value="">{{ __('Wybierz...') }}</option>
+                        @foreach($detectorTypes as $type)
+                            <option value="{{ $type->id }}">{{ $type->name }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div>
+                    <x-label for="detectorCustomName" value="{{ __('LUB Nazwa Niestandardowa (jeśli brak na liście)') }}" />
+                    <x-input wire:model="detectorCustomName" id="detectorCustomName" type="text" class="block mt-1 w-full" placeholder="np. Nowy Typ Detektora" />
+                    <x-input-error for="detectorCustomName" class="mt-2" />
                 </div>
                 <div>
                     <x-label for="detectorLocation" value="{{ __('Lokalizacja') }}" />

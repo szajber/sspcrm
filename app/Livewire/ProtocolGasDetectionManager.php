@@ -20,13 +20,15 @@ class ProtocolGasDetectionManager extends Component
     // --- Centrale ---
     public $showCentralModal = false;
     public $editingCentralId = null;
-    public $centralName = '';
+    public $centralTypeId = ''; // ID wybranego typu
+    public $centralCustomName = ''; // Nazwa wpisana ręcznie
     public $centralLocation = '';
 
     // --- Detektory ---
     public $showDetectorModal = false;
     public $editingDetectorId = null;
-    public $detectorName = '';
+    public $detectorTypeId = ''; // ID wybranego typu
+    public $detectorCustomName = ''; // Nazwa wpisana ręcznie
     public $detectorLocation = '';
 
     // --- Urządzenia Sterujące ---
@@ -46,7 +48,8 @@ class ProtocolGasDetectionManager extends Component
     public function openCentralModal()
     {
         $this->editingCentralId = null;
-        $this->centralName = '';
+        $this->centralTypeId = '';
+        $this->centralCustomName = '';
         $this->centralLocation = '';
         $this->showCentralModal = true;
     }
@@ -56,7 +59,12 @@ class ProtocolGasDetectionManager extends Component
         $item = ProtocolGasDetectionCentral::find($id);
         if ($item && $item->protocol_id === $this->protocol->id) {
             $this->editingCentralId = $id;
-            $this->centralName = $item->name;
+
+            // Próbujemy dopasować typ po nazwie
+            $type = GasDetectionCentralType::where('name', $item->name)->first();
+            $this->centralTypeId = $type ? $type->id : '';
+            $this->centralCustomName = $type ? '' : $item->name;
+
             $this->centralLocation = $item->location;
             $this->showCentralModal = true;
         }
@@ -67,7 +75,11 @@ class ProtocolGasDetectionManager extends Component
         $item = ProtocolGasDetectionCentral::find($id);
         if ($item && $item->protocol_id === $this->protocol->id) {
             $this->editingCentralId = null;
-            $this->centralName = $item->name . ' - KOPIA';
+
+            // Przy klonowaniu ustawiamy jako custom, chyba że chcemy dopasować
+            $this->centralTypeId = '';
+            $this->centralCustomName = $item->name . ' - KOPIA';
+
             $this->centralLocation = $item->location;
             $this->showCentralModal = true;
         }
@@ -76,39 +88,66 @@ class ProtocolGasDetectionManager extends Component
     public function saveCentral()
     {
         $this->validate([
-            'centralName' => 'required|string|max:255',
+            'centralTypeId' => 'nullable|exists:gas_detection_central_types,id',
+            'centralCustomName' => 'nullable|string|max:255',
             'centralLocation' => 'nullable|string|max:255',
         ]);
+
+        // Automatyczne dodawanie nowego typu
+        if (empty($this->centralTypeId) && !empty($this->centralCustomName)) {
+            $existingType = GasDetectionCentralType::where('name', $this->centralCustomName)->first();
+            if ($existingType) {
+                $this->centralTypeId = $existingType->id;
+            } else {
+                $newType = GasDetectionCentralType::create(['name' => $this->centralCustomName]);
+                $this->centralTypeId = $newType->id;
+            }
+        }
+
+        $finalName = '';
+        if ($this->centralTypeId) {
+            $type = GasDetectionCentralType::find($this->centralTypeId);
+            $finalName = $type ? $type->name : $this->centralCustomName;
+        } else {
+            $finalName = $this->centralCustomName;
+        }
+
+        // Fallback jeśli nazwa pusta (walidacja wyżej powinna to wyłapać, ale upewnijmy się)
+        if (empty($finalName)) {
+            $this->addError('centralCustomName', 'Musisz wybrać typ lub wpisać nazwę.');
+            return;
+        }
 
         if ($this->editingCentralId) {
             $item = ProtocolGasDetectionCentral::find($this->editingCentralId);
             if ($item && $item->protocol_id === $this->protocol->id) {
                 $item->update([
-                    'name' => $this->centralName,
+                    'name' => $finalName,
                     'location' => $this->centralLocation,
                 ]);
                 if ($item->gas_detection_central_id) {
                     $inv = GasDetectionCentral::find($item->gas_detection_central_id);
-                    if ($inv) $inv->update(['name' => $this->centralName, 'location' => $this->centralLocation]);
+                    if ($inv) $inv->update(['name' => $finalName, 'location' => $this->centralLocation]);
                 }
             }
         } else {
             $invItem = GasDetectionCentral::create([
                 'client_object_id' => $this->protocol->clientObject->id,
-                'name' => $this->centralName,
+                'name' => $finalName,
                 'location' => $this->centralLocation,
                 'is_active' => true,
             ]);
             $maxSort = $this->protocol->gasDetectionCentrals()->max('sort_order') ?? 0;
             $this->protocol->gasDetectionCentrals()->create([
                 'gas_detection_central_id' => $invItem->id,
-                'name' => $this->centralName,
+                'name' => $finalName,
                 'location' => $this->centralLocation,
                 'sort_order' => $maxSort + 1,
             ]);
         }
         $this->showCentralModal = false;
-        $this->centralName = '';
+        $this->centralTypeId = '';
+        $this->centralCustomName = '';
         $this->centralLocation = '';
     }
 
@@ -124,7 +163,8 @@ class ProtocolGasDetectionManager extends Component
     public function openDetectorModal()
     {
         $this->editingDetectorId = null;
-        $this->detectorName = '';
+        $this->detectorTypeId = '';
+        $this->detectorCustomName = '';
         $this->detectorLocation = '';
         $this->showDetectorModal = true;
     }
@@ -134,7 +174,11 @@ class ProtocolGasDetectionManager extends Component
         $item = ProtocolGasDetectionDetector::find($id);
         if ($item && $item->protocol_id === $this->protocol->id) {
             $this->editingDetectorId = $id;
-            $this->detectorName = $item->name;
+
+            $type = GasDetectionDetectorType::where('name', $item->name)->first();
+            $this->detectorTypeId = $type ? $type->id : '';
+            $this->detectorCustomName = $type ? '' : $item->name;
+
             $this->detectorLocation = $item->location;
             $this->showDetectorModal = true;
         }
@@ -145,7 +189,8 @@ class ProtocolGasDetectionManager extends Component
         $item = ProtocolGasDetectionDetector::find($id);
         if ($item && $item->protocol_id === $this->protocol->id) {
             $this->editingDetectorId = null;
-            $this->detectorName = $item->name . ' - KOPIA';
+            $this->detectorTypeId = '';
+            $this->detectorCustomName = $item->name . ' - KOPIA';
             $this->detectorLocation = $item->location;
             $this->showDetectorModal = true;
         }
@@ -154,39 +199,65 @@ class ProtocolGasDetectionManager extends Component
     public function saveDetector()
     {
         $this->validate([
-            'detectorName' => 'required|string|max:255',
+            'detectorTypeId' => 'nullable|exists:gas_detection_detector_types,id',
+            'detectorCustomName' => 'nullable|string|max:255',
             'detectorLocation' => 'nullable|string|max:255',
         ]);
+
+        // Automatyczne dodawanie nowego typu
+        if (empty($this->detectorTypeId) && !empty($this->detectorCustomName)) {
+            $existingType = GasDetectionDetectorType::where('name', $this->detectorCustomName)->first();
+            if ($existingType) {
+                $this->detectorTypeId = $existingType->id;
+            } else {
+                $newType = GasDetectionDetectorType::create(['name' => $this->detectorCustomName]);
+                $this->detectorTypeId = $newType->id;
+            }
+        }
+
+        $finalName = '';
+        if ($this->detectorTypeId) {
+            $type = GasDetectionDetectorType::find($this->detectorTypeId);
+            $finalName = $type ? $type->name : $this->detectorCustomName;
+        } else {
+            $finalName = $this->detectorCustomName;
+        }
+
+        if (empty($finalName)) {
+            $this->addError('detectorCustomName', 'Musisz wybrać typ lub wpisać nazwę.');
+            return;
+        }
 
         if ($this->editingDetectorId) {
             $item = ProtocolGasDetectionDetector::find($this->editingDetectorId);
             if ($item && $item->protocol_id === $this->protocol->id) {
                 $item->update([
-                    'name' => $this->detectorName,
+                    'name' => $finalName,
                     'location' => $this->detectorLocation,
                 ]);
                 if ($item->gas_detection_detector_id) {
                     $inv = GasDetectionDetector::find($item->gas_detection_detector_id);
-                    if ($inv) $inv->update(['name' => $this->detectorName, 'location' => $this->detectorLocation]);
+                    if ($inv) $inv->update(['name' => $finalName, 'location' => $this->detectorLocation]);
                 }
             }
         } else {
             $invItem = GasDetectionDetector::create([
                 'client_object_id' => $this->protocol->clientObject->id,
-                'name' => $this->detectorName,
+                'name' => $finalName,
                 'location' => $this->detectorLocation,
                 'is_active' => true,
             ]);
             $maxSort = $this->protocol->gasDetectionDetectors()->max('sort_order') ?? 0;
             $this->protocol->gasDetectionDetectors()->create([
                 'gas_detection_detector_id' => $invItem->id,
-                'name' => $this->detectorName,
+                'name' => $finalName,
                 'location' => $this->detectorLocation,
                 'sort_order' => $maxSort + 1,
             ]);
         }
         $this->showDetectorModal = false;
-        $this->detectorName = '';
+        $this->detectorTypeId = '';
+        $this->detectorCustomName = '';
         $this->detectorLocation = '';
     }
 
