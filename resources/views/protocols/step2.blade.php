@@ -54,6 +54,10 @@
                         <div class="mb-6">
                             @livewire('protocol-ventilation-manager', ['protocol' => $protocol])
                         </div>
+                    @elseif($protocol->system->slug === 'detekcja-gazow')
+                        <div class="mb-6">
+                            @livewire('protocol-gas-detection-manager', ['protocol' => $protocol])
+                        </div>
                     @else
                         <div class="text-center py-10">
                                 <h3 class="text-lg font-medium text-gray-900">{{ __('Dane szczegółowe systemu') }}</h3>

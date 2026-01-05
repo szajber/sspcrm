@@ -904,6 +904,122 @@
                 </div>
             </div>
 
+        @elseif($protocol->system->slug === 'detekcja-gazow')
+            @php
+                $centrals = $protocol->gasDetectionCentrals()->orderBy('sort_order')->orderBy('id')->get();
+                $detectors = $protocol->gasDetectionDetectors()->orderBy('sort_order')->orderBy('id')->get();
+                $controls = $protocol->gasDetectionControlDevices()->orderBy('sort_order')->orderBy('id')->get();
+                $stats = [
+                    'detectors_total' => $detectors->count(),
+                    'detectors_positive' => $detectors->where('result', 'positive')->count(),
+                    'detectors_negative' => $detectors->where('result', 'negative')->count(),
+                    'detectors_calibration' => $detectors->where('result', 'calibration')->count(),
+                ];
+            @endphp
+
+            <div class="label">Centrale</div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="border: 1px solid #ddd; padding: 5px;">Nazwa/Model</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Wynik</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Uwagi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($centrals as $item)
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 5px;">
+                                <b>{{ $item->name }}</b><br>{{ $item->location }}
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">
+                                {{ $item->result === 'positive' ? 'Sprawna' : 'Niesprawna' }}
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->notes }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            <div class="label">Detektory</div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="border: 1px solid #ddd; padding: 5px;">Nazwa/Typ</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Wynik</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Data Kalibracji</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Uwagi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($detectors as $item)
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 5px;">
+                                <b>{{ $item->name }}</b><br>{{ $item->location }}
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">
+                                {{ $item->result === 'positive' ? 'Sprawny' : ($item->result === 'calibration' ? 'Do kalibracji' : 'Niesprawny') }}
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">
+                                {{ $item->next_calibration_date ? $item->next_calibration_date->format('d.m.Y') : '-' }}
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->notes }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            <div class="label">Urządzenia Sterujące</div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="border: 1px solid #ddd; padding: 5px;">Typ</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Wynik</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Uwagi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($controls as $item)
+                        <tr>
+                            <td style="border: 1px solid #ddd; padding: 5px;">
+                                <b>{{ $item->type }}</b><br>{{ $item->location }}
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">
+                                {{ $item->result === 'positive' ? 'Sprawne' : 'Niesprawne' }}
+                            </td>
+                            <td style="border: 1px solid #ddd; padding: 5px;">{{ $item->notes }}</td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+
+            <div class="label">Podsumowanie Detektorów</div>
+            <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 10px;">
+                <thead>
+                    <tr style="background-color: #f0f0f0;">
+                        <th style="border: 1px solid #ddd; padding: 5px;">Liczba detektorów</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Sprawne</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Do kalibracji</th>
+                        <th style="border: 1px solid #ddd; padding: 5px;">Niesprawne</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center;">{{ $stats['detectors_total'] }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center; color: green;">{{ $stats['detectors_positive'] }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center; color: orange;">{{ $stats['detectors_calibration'] }}</td>
+                        <td style="border: 1px solid #ddd; padding: 5px; text-align: center; color: red;">{{ $stats['detectors_negative'] }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="content-section">
+                <div class="label">Uwagi Końcowe</div>
+                <div style="border: 1px solid #ddd; padding: 10px; min-height: 50px;">
+                    {!! $protocol->data['final_notes'] ?? 'Brak uwag.' !!}
+                </div>
+            </div>
+
         @else
             <p>Szczegółowe wyniki przeglądu systemu {{ $protocol->system->name }}...</p>
         @endif

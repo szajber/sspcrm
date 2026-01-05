@@ -683,6 +683,121 @@
                                 </div>
                             </div>
                         @endif
+
+                        @if($protocol->system->slug === 'detekcja-gazow')
+                            <!-- Centrale -->
+                            <div class="mt-8">
+                                <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Centrale') }}</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Nazwa/Model</th>
+                                                <th class="px-3 py-2 text-center font-medium text-gray-500">Wynik</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Uwagi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            @foreach($centrals as $item)
+                                                <tr>
+                                                    <td class="px-3 py-2 font-medium text-gray-900">
+                                                        <div>{{ $item->name }}</div>
+                                                        <div class="text-xs text-gray-500">{{ $item->location }}</div>
+                                                    </td>
+                                                    <td class="px-3 py-2 text-center">
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                                            {{ $item->result === 'positive' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                            {{ $item->result === 'positive' ? 'Sprawna' : 'Niesprawna' }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-3 py-2 text-gray-500 text-xs">{{ $item->notes }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Detektory -->
+                            <div class="mt-8">
+                                <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Detektory') }}</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Nazwa/Typ</th>
+                                                <th class="px-3 py-2 text-center font-medium text-gray-500">Wynik</th>
+                                                <th class="px-3 py-2 text-center font-medium text-gray-500">Następna Kalibracja</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Uwagi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            @foreach($detectors as $item)
+                                                <tr>
+                                                    <td class="px-3 py-2 font-medium text-gray-900">
+                                                        <div>{{ $item->name }}</div>
+                                                        <div class="text-xs text-gray-500">{{ $item->location }}</div>
+                                                    </td>
+                                                    <td class="px-3 py-2 text-center">
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                                            {{ $item->result === 'positive' ? 'bg-green-100 text-green-800' : ($item->result === 'calibration' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800') }}">
+                                                            {{ $item->result === 'positive' ? 'Sprawny' : ($item->result === 'calibration' ? 'Do kalibracji' : 'Niesprawny') }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-3 py-2 text-center text-gray-500">
+                                                        {{ $item->next_calibration_date ? $item->next_calibration_date->format('d.m.Y') : '-' }}
+                                                    </td>
+                                                    <td class="px-3 py-2 text-gray-500 text-xs">{{ $item->notes }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Urządzenia Sterujące -->
+                            <div class="mt-8">
+                                <h3 class="font-bold text-gray-700 mb-4 text-lg border-b pb-2">{{ __('Urządzenia Sterujące') }}</h3>
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200 text-sm">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Typ</th>
+                                                <th class="px-3 py-2 text-center font-medium text-gray-500">Wynik</th>
+                                                <th class="px-3 py-2 text-left font-medium text-gray-500">Uwagi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            @foreach($controls as $item)
+                                                <tr>
+                                                    <td class="px-3 py-2 font-medium text-gray-900">
+                                                        <div>{{ $item->type }}</div>
+                                                        <div class="text-xs text-gray-500">{{ $item->location }}</div>
+                                                    </td>
+                                                    <td class="px-3 py-2 text-center">
+                                                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                                                            {{ $item->result === 'positive' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                                                            {{ $item->result === 'positive' ? 'Sprawne' : 'Niesprawne' }}
+                                                        </span>
+                                                    </td>
+                                                    <td class="px-3 py-2 text-gray-500 text-xs">{{ $item->notes }}</td>
+                                                </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="mt-8 p-4 bg-gray-100 rounded page-break-inside-avoid">
+                                <h4 class="font-bold mb-2">Podsumowanie Detektorów</h4>
+                                <div class="grid grid-cols-4 gap-4 text-center">
+                                    <div>Liczba detektorów: <strong>{{ $stats['detectors_total'] }}</strong></div>
+                                    <div class="text-green-600">Sprawne: <strong>{{ $stats['detectors_positive'] }}</strong></div>
+                                    <div class="text-yellow-600">Do kalibracji: <strong>{{ $stats['detectors_calibration'] }}</strong></div>
+                                    <div class="text-red-600">Niesprawne: <strong>{{ $stats['detectors_negative'] }}</strong></div>
+                                </div>
+                            </div>
+                        @endif
                     </div>
 
                     <div class="flex items-center justify-end mt-6 space-x-4">

@@ -88,4 +88,19 @@ class Protocol extends Model
     {
         return $this->hasMany(ProtocolVentilationFan::class);
     }
+
+    public function gasDetectionCentrals()
+    {
+        return $this->hasMany(ProtocolGasDetectionCentral::class);
+    }
+
+    public function gasDetectionDetectors()
+    {
+        return $this->hasMany(ProtocolGasDetectionDetector::class);
+    }
+
+    public function gasDetectionControlDevices()
+    {
+        return $this->hasMany(ProtocolGasDetectionControlDevice::class);
+    }
 }

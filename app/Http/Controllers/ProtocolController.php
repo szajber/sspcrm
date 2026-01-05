@@ -25,6 +25,12 @@ use App\Models\VentilationDistributor;
 use App\Models\ProtocolVentilationDistributor;
 use App\Models\VentilationFan;
 use App\Models\ProtocolVentilationFan;
+use App\Models\GasDetectionCentral;
+use App\Models\ProtocolGasDetectionCentral;
+use App\Models\GasDetectionDetector;
+use App\Models\ProtocolGasDetectionDetector;
+use App\Models\GasDetectionControlDevice;
+use App\Models\ProtocolGasDetectionControlDevice;
 use Illuminate\Support\Str;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -536,6 +542,96 @@ class ProtocolController extends Controller
             return view('protocols.step2', compact('protocol', 'protocolDistributors', 'protocolFans'));
         }
 
+        if ($protocol->system->slug === 'detekcja-gazow') {
+            $protocolCentrals = $protocol->gasDetectionCentrals()->orderBy('sort_order')->orderBy('id')->get();
+            $protocolDetectors = $protocol->gasDetectionDetectors()->orderBy('sort_order')->orderBy('id')->get();
+            $protocolControls = $protocol->gasDetectionControlDevices()->orderBy('sort_order')->orderBy('id')->get();
+
+            if ($protocolCentrals->isEmpty() && $protocolDetectors->isEmpty() && $protocolControls->isEmpty()) {
+                $lastProtocol = Protocol::where('client_object_id', $protocol->clientObject->id)
+                    ->where('system_id', $protocol->system->id)
+                    ->where('id', '<', $protocol->id)
+                    ->orderBy('date', 'desc')
+                    ->first();
+
+                // 1. Centrale
+                if ($lastProtocol && $lastProtocol->gasDetectionCentrals()->exists()) {
+                    foreach ($lastProtocol->gasDetectionCentrals as $prev) {
+                        $inv = GasDetectionCentral::find($prev->gas_detection_central_id);
+                        if ($inv && $inv->is_active) {
+                            $protocol->gasDetectionCentrals()->create([
+                                'gas_detection_central_id' => $prev->gas_detection_central_id,
+                                'name' => $prev->name,
+                                'location' => $prev->location,
+                                'sort_order' => $prev->sort_order,
+                            ]);
+                        }
+                    }
+                } else {
+                    $inventory = GasDetectionCentral::where('client_object_id', $protocol->clientObject->id)->where('is_active', true)->orderBy('sort_order')->get();
+                    foreach ($inventory as $item) {
+                        $protocol->gasDetectionCentrals()->create([
+                            'gas_detection_central_id' => $item->id,
+                            'name' => $item->name,
+                            'location' => $item->location,
+                            'sort_order' => $item->sort_order,
+                        ]);
+                    }
+                }
+
+                // 2. Detektory
+                if ($lastProtocol && $lastProtocol->gasDetectionDetectors()->exists()) {
+                    foreach ($lastProtocol->gasDetectionDetectors as $prev) {
+                        $inv = GasDetectionDetector::find($prev->gas_detection_detector_id);
+                        if ($inv && $inv->is_active) {
+                            $protocol->gasDetectionDetectors()->create([
+                                'gas_detection_detector_id' => $prev->gas_detection_detector_id,
+                                'name' => $prev->name,
+                                'location' => $prev->location,
+                                'sort_order' => $prev->sort_order,
+                            ]);
+                        }
+                    }
+                } else {
+                    $inventory = GasDetectionDetector::where('client_object_id', $protocol->clientObject->id)->where('is_active', true)->orderBy('sort_order')->get();
+                    foreach ($inventory as $item) {
+                        $protocol->gasDetectionDetectors()->create([
+                            'gas_detection_detector_id' => $item->id,
+                            'name' => $item->name,
+                            'location' => $item->location,
+                            'sort_order' => $item->sort_order,
+                        ]);
+                    }
+                }
+
+                // 3. Urządzenia Sterujące
+                if ($lastProtocol && $lastProtocol->gasDetectionControlDevices()->exists()) {
+                    foreach ($lastProtocol->gasDetectionControlDevices as $prev) {
+                        $inv = GasDetectionControlDevice::find($prev->gas_detection_control_device_id);
+                        if ($inv && $inv->is_active) {
+                            $protocol->gasDetectionControlDevices()->create([
+                                'gas_detection_control_device_id' => $prev->gas_detection_control_device_id,
+                                'type' => $prev->type,
+                                'location' => $prev->location,
+                                'sort_order' => $prev->sort_order,
+                            ]);
+                        }
+                    }
+                } else {
+                    $inventory = GasDetectionControlDevice::where('client_object_id', $protocol->clientObject->id)->where('is_active', true)->orderBy('sort_order')->get();
+                    foreach ($inventory as $item) {
+                        $protocol->gasDetectionControlDevices()->create([
+                            'gas_detection_control_device_id' => $item->id,
+                            'type' => $item->type,
+                            'location' => $item->location,
+                            'sort_order' => $item->sort_order,
+                        ]);
+                    }
+                }
+            }
+            return view('protocols.step2', compact('protocol'));
+        }
+
         return view('protocols.step2', compact('protocol'));
     }
 
@@ -611,6 +707,13 @@ class ProtocolController extends Controller
             return view('protocols.step3', compact('protocol', 'protocolDistributors', 'protocolFans'));
         }
 
+        if ($protocol->system->slug === 'detekcja-gazow') {
+            $centrals = $protocol->gasDetectionCentrals()->orderBy('sort_order')->orderBy('id')->get();
+            $detectors = $protocol->gasDetectionDetectors()->orderBy('sort_order')->orderBy('id')->get();
+            $controls = $protocol->gasDetectionControlDevices()->orderBy('sort_order')->orderBy('id')->get();
+            return view('protocols.step3', compact('protocol', 'centrals', 'detectors', 'controls'));
+        }
+
         // Dla innych systemów (placeholder)
         return redirect()->route('protocols.preview', $protocol);
     }
@@ -644,6 +747,63 @@ class ProtocolController extends Controller
                         if ($inventory) {
                             $inventory->update(['next_service_year' => $data['next_service_year']]);
                         }
+                    }
+                }
+            }
+        }
+
+        if ($protocol->system->slug === 'detekcja-gazow') {
+            $validated = $request->validate([
+                'centrals' => 'array',
+                'centrals.*.id' => 'required|exists:protocol_gas_detection_centrals,id',
+                'centrals.*.result' => 'required|in:positive,negative',
+                'centrals.*.notes' => 'nullable|string',
+
+                'detectors' => 'array',
+                'detectors.*.id' => 'required|exists:protocol_gas_detection_detectors,id',
+                'detectors.*.result' => 'required|in:positive,negative,calibration',
+                'detectors.*.next_calibration_date' => 'nullable|date',
+                'detectors.*.notes' => 'nullable|string',
+
+                'controls' => 'array',
+                'controls.*.id' => 'required|exists:protocol_gas_detection_control_devices,id',
+                'controls.*.result' => 'required|in:positive,negative',
+                'controls.*.notes' => 'nullable|string',
+            ]);
+
+            if (isset($validated['centrals'])) {
+                foreach ($validated['centrals'] as $data) {
+                    $item = ProtocolGasDetectionCentral::find($data['id']);
+                    if ($item && $item->protocol_id === $protocol->id) {
+                        $item->update([
+                            'result' => $data['result'],
+                            'notes' => $data['notes'],
+                        ]);
+                    }
+                }
+            }
+
+            if (isset($validated['detectors'])) {
+                foreach ($validated['detectors'] as $data) {
+                    $item = ProtocolGasDetectionDetector::find($data['id']);
+                    if ($item && $item->protocol_id === $protocol->id) {
+                        $item->update([
+                            'result' => $data['result'],
+                            'next_calibration_date' => $data['next_calibration_date'],
+                            'notes' => $data['notes'],
+                        ]);
+                    }
+                }
+            }
+
+            if (isset($validated['controls'])) {
+                foreach ($validated['controls'] as $data) {
+                    $item = ProtocolGasDetectionControlDevice::find($data['id']);
+                    if ($item && $item->protocol_id === $protocol->id) {
+                        $item->update([
+                            'result' => $data['result'],
+                            'notes' => $data['notes'],
+                        ]);
                     }
                 }
             }
@@ -1111,6 +1271,20 @@ class ProtocolController extends Controller
             ];
 
             $previewData = compact('distributors', 'fans', 'stats');
+        }
+
+        if ($protocol->system->slug === 'detekcja-gazow') {
+            $centrals = $protocol->gasDetectionCentrals()->orderBy('sort_order')->orderBy('id')->get();
+            $detectors = $protocol->gasDetectionDetectors()->orderBy('sort_order')->orderBy('id')->get();
+            $controls = $protocol->gasDetectionControlDevices()->orderBy('sort_order')->orderBy('id')->get();
+
+            $stats = [
+                'detectors_total' => $detectors->count(),
+                'detectors_positive' => $detectors->where('result', 'positive')->count(),
+                'detectors_negative' => $detectors->where('result', 'negative')->count(),
+                'detectors_calibration' => $detectors->where('result', 'calibration')->count(),
+            ];
+            $previewData = compact('centrals', 'detectors', 'controls', 'stats');
         }
 
         return view('protocols.preview', compact('protocol', 'template') + $previewData);
