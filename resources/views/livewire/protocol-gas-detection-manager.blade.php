@@ -1,4 +1,16 @@
 <div>
+    <datalist id="centralTypesList">
+        @foreach($centralTypes as $type)
+            <option value="{{ $type->name }}">
+        @endforeach
+    </datalist>
+
+    <datalist id="detectorTypesList">
+        @foreach($detectorTypes as $type)
+            <option value="{{ $type->name }}">
+        @endforeach
+    </datalist>
+
     <!-- Centrale -->
     <div class="mb-8">
         <div class="flex justify-between items-center mb-4">
@@ -162,11 +174,6 @@
                 <div>
                     <x-label for="centralName" value="{{ __('Nazwa/Model') }}" />
                     <x-input wire:model="centralName" id="centralName" type="text" list="centralTypesList" class="block mt-1 w-full" />
-                    <datalist id="centralTypesList">
-                        @foreach($centralTypes as $type)
-                            <option value="{{ $type->name }}">
-                        @endforeach
-                    </datalist>
                     <x-input-error for="centralName" class="mt-2" />
                 </div>
                 <div>
@@ -196,11 +203,6 @@
                 <div>
                     <x-label for="detectorName" value="{{ __('Nazwa/Typ') }}" />
                     <x-input wire:model="detectorName" id="detectorName" type="text" list="detectorTypesList" class="block mt-1 w-full" />
-                    <datalist id="detectorTypesList">
-                        @foreach($detectorTypes as $type)
-                            <option value="{{ $type->name }}">
-                        @endforeach
-                    </datalist>
                     <x-input-error for="detectorName" class="mt-2" />
                 </div>
                 <div>

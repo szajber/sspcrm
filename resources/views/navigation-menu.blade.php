@@ -193,6 +193,42 @@
                     </x-responsive-nav-link>
                 @endif
 
+                <!-- Settings Links -->
+                <div class="border-t border-gray-200"></div>
+                <div class="block px-4 py-2 text-xs text-gray-400">
+                    {{ __('Ustawienia') }}
+                </div>
+
+                <x-responsive-nav-link href="{{ route('settings.protocols.index') }}" :active="request()->routeIs('settings.protocols.index')">
+                    {{ __('Protokoły') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link href="{{ route('settings.fire-extinguisher-types.index') }}" :active="request()->routeIs('settings.fire-extinguisher-types.index')">
+                    {{ __('Typy gaśnic') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link href="{{ route('settings.door-resistance-classes.index') }}" :active="request()->routeIs('settings.door-resistance-classes.index')">
+                    {{ __('Klasy odporności drzwi') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link href="{{ route('settings.fire-damper-types.index') }}" :active="request()->routeIs('settings.fire-damper-types.index')">
+                    {{ __('Typy klap') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link href="{{ route('settings.smoke-extraction-central-types.index') }}" :active="request()->routeIs('settings.smoke-extraction-central-types.index')">
+                    {{ __('Typy central oddymiania') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link href="{{ route('settings.gas-detection-central-types.index') }}" :active="request()->routeIs('settings.gas-detection-central-types.index')">
+                    {{ __('Centrale gazu') }}
+                </x-responsive-nav-link>
+
+                <x-responsive-nav-link href="{{ route('settings.gas-detection-detector-types.index') }}" :active="request()->routeIs('settings.gas-detection-detector-types.index')">
+                    {{ __('Detektory kotłownia') }}
+                </x-responsive-nav-link>
+
+                <div class="border-t border-gray-200"></div>
+
                 <!-- Authentication -->
                 <form method="POST" action="{{ route('logout') }}" x-data>
                     @csrf
