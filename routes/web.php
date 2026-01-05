@@ -68,6 +68,14 @@ Route::middleware([
         ->names('settings.smoke-extraction-central-types')
         ->parameters(['smoke-extraction-central-types' => 'smokeExtractionCentralType']);
 
+    Route::resource('settings/gas-detection-central-types', \App\Http\Controllers\GasDetectionCentralTypeController::class)
+        ->names('settings.gas-detection-central-types')
+        ->parameters(['gas-detection-central-types' => 'gasDetectionCentralType']);
+
+    Route::resource('settings/gas-detection-detector-types', \App\Http\Controllers\GasDetectionDetectorTypeController::class)
+        ->names('settings.gas-detection-detector-types')
+        ->parameters(['gas-detection-detector-types' => 'gasDetectionDetectorType']);
+
     Route::get('/settings/company', [CompanySettingController::class, 'edit'])->name('company.edit');
     Route::put('/settings/company', [CompanySettingController::class, 'update'])->name('company.update');
 

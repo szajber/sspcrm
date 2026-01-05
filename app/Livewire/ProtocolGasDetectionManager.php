@@ -5,6 +5,8 @@ namespace App\Livewire;
 use App\Models\GasDetectionCentral;
 use App\Models\GasDetectionControlDevice;
 use App\Models\GasDetectionDetector;
+use App\Models\GasDetectionCentralType;
+use App\Models\GasDetectionDetectorType;
 use App\Models\Protocol;
 use App\Models\ProtocolGasDetectionCentral;
 use App\Models\ProtocolGasDetectionControlDevice;
@@ -334,6 +336,8 @@ class ProtocolGasDetectionManager extends Component
             'centrals' => $this->protocol->gasDetectionCentrals()->orderBy('sort_order')->orderBy('id')->get(),
             'detectors' => $this->protocol->gasDetectionDetectors()->orderBy('sort_order')->orderBy('id')->get(),
             'controls' => $this->protocol->gasDetectionControlDevices()->orderBy('sort_order')->orderBy('id')->get(),
+            'centralTypes' => GasDetectionCentralType::orderBy('name')->get(),
+            'detectorTypes' => GasDetectionDetectorType::orderBy('name')->get(),
         ]);
     }
 }

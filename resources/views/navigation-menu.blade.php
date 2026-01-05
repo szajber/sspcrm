@@ -122,6 +122,14 @@
                                 {{ __('Typy central oddymiania') }}
                             </x-dropdown-link>
 
+                            <x-dropdown-link href="{{ route('settings.gas-detection-central-types.index') }}">
+                                {{ __('Centrale gazu') }}
+                            </x-dropdown-link>
+
+                            <x-dropdown-link href="{{ route('settings.gas-detection-detector-types.index') }}">
+                                {{ __('Detektory kotłownia') }}
+                            </x-dropdown-link>
+
                             <div class="border-t border-gray-200"></div>
 
                             <!-- Authentication -->

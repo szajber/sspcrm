@@ -161,7 +161,12 @@
             <div class="grid grid-cols-1 gap-6">
                 <div>
                     <x-label for="centralName" value="{{ __('Nazwa/Model') }}" />
-                    <x-input wire:model="centralName" id="centralName" type="text" class="block mt-1 w-full" />
+                    <x-input wire:model="centralName" id="centralName" type="text" list="centralTypesList" class="block mt-1 w-full" />
+                    <datalist id="centralTypesList">
+                        @foreach($centralTypes as $type)
+                            <option value="{{ $type->name }}">
+                        @endforeach
+                    </datalist>
                     <x-input-error for="centralName" class="mt-2" />
                 </div>
                 <div>
@@ -190,7 +195,12 @@
             <div class="grid grid-cols-1 gap-6">
                 <div>
                     <x-label for="detectorName" value="{{ __('Nazwa/Typ') }}" />
-                    <x-input wire:model="detectorName" id="detectorName" type="text" class="block mt-1 w-full" />
+                    <x-input wire:model="detectorName" id="detectorName" type="text" list="detectorTypesList" class="block mt-1 w-full" />
+                    <datalist id="detectorTypesList">
+                        @foreach($detectorTypes as $type)
+                            <option value="{{ $type->name }}">
+                        @endforeach
+                    </datalist>
                     <x-input-error for="detectorName" class="mt-2" />
                 </div>
                 <div>
