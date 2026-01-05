@@ -102,6 +102,14 @@
                     {{ __('Oddymianie') }}
                 </a>
 
+                <a href="{{ route('settings.gas-detection-central-types.index') }}" class="{{ request()->routeIs('settings.gas-detection-central-types.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md pl-11">
+                    {{ __('Centrale gazu') }}
+                </a>
+
+                <a href="{{ route('settings.gas-detection-detector-types.index') }}" class="{{ request()->routeIs('settings.gas-detection-detector-types.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md pl-11">
+                    {{ __('Detektory gazu') }}
+                </a>
+
                 <div class="border-t border-gray-700 my-2 mx-4"></div>
 
                 <a href="{{ route('users.index') }}" class="{{ request()->routeIs('users.*') ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white' }} group flex items-center px-2 py-2 text-sm font-medium rounded-md pl-11">
